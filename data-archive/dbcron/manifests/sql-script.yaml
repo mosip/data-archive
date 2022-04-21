@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: script
+  namespace: dbcron
+data:
+  delete-records.sh: >-
+   #!/bin/bash
+   
+    set -e
+
+    psql -c "INSERT INTO audit.app_audit_log_archive(log_id, log_dtimes, log_desc, event_id, event_type, event_name, action_dtimes, host_name, host_ip, session_user_id, session_user_name, app_id, app_name, module_id, module_name, ref_id, ref_id_type, cr_by) select * from audit.app_audit_log where log_dtimes <= (now() - interval '24' hour)"
+
+    psql -c "delete from audit.app_audit_log where log_dtimes <= (now() - interval '24' hour)"
