@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cronjob-runner
+rules:
+  - verbs:
+      - get
+      - list
+      - watch
+      - delete
+    apiGroups:
+      - ''
+    resources:
+      - pods

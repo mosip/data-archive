@@ -1,0 +1,21 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: remove-evicted-pods
+  namespace: cronjobs
+spec:
+  schedule: "0 0 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccount: cronjob-runner-sa
+          containers:
+          - name: kubectl
+            image: bitnami/kubectl:latest
+            command:
+            - /bin/sh
+            - -c
+            - kubectl delete pods --field-selector status.phase=Failed --all-namespaces # ("ContainerCannotRun", "Error", "ContainerCreating", etc.).
+          restartPolicy: OnFailure
+      backoffLimit: 3

@@ -1,0 +1,39 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: audittable-archive-cron-job
+  namespace: dbcron
+spec:
+#Cron Time is set according to server time, ensure server time zone and set accordingly.
+  schedule: "0 0 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: audittable-archive-job
+            image: postgres
+            volumeMounts:
+              - name: dbscript
+                mountPath: /docker-entrypoint-initdb.d
+            envFrom:
+            - configMapRef:
+                name: db-variables
+            env:
+              - name: PGUSER
+                valueFrom:
+                  secretKeyRef:
+                    name: pgusr
+                    key: pgusr
+              - name: PGPASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: pgpass
+                    key: pgpass
+            imagePullPolicy: Always
+          restartPolicy: OnFailure
+          volumes:
+          - name:  dbscript
+            configMap:
+              name: script
+      backoffLimit: 3
