@@ -32,3 +32,37 @@ Above property will archive the mosip_credential table data based on the status 
 
 ```credential.status.time.map=ISSUED:2,FAILED:7```
 Above property will archive the mosip_credential table data based on the status code and number of days.
+
+## Properties file variable details
+**source_db_serverip:** Contains the source database server ip. 
+
+**source_db_port:** Contains the source database port.
+
+**source_db_name:** Contains the source database name.
+
+**source_schema_name:** Contains the source schema name.
+
+**source_db_uname:** Contains the source database username.
+
+**source_db_pass:** Contains the source database password.
+
+**archive_table1:** Contains the archive table name.
+
+**archive_db_serverip:** Contains the archive database server ip.
+
+**archive_db_port:** Contains the archive database port.
+
+**archive_db_name:** Contains the archive database name.
+
+**archive_schema_name:** Contains the archive schema name.
+
+**archive_db_uname:** Contains the archive database username.
+
+**archive_db_pass:** Contains the archive database password.
+
+**archive_older_than_days:** Contains the number of days to archive the data.
+
+**credential.status.time.map:** Contains the status code and number of days to archive the data.
+
+**credential.endstatus.list:** Contains the status code to archive the data.
+
