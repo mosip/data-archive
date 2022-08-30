@@ -10,29 +10,33 @@ in mosip_credential db.
 4. Switch to virtual env.
 5. Install required psycopg dependency. `sudo yum install python3-psycopg
 
-## Archive jobs based on no of days
-Run the following command to run the archive jobs based on no of days
-    
-```
-sh mosip_archive_credential_table_base-on-no-of-days.sh
-```
- set the no of days to archive the data in mosip_archive_credential.ini file.
 
- ```archive_older_than_days = 7```
-This will archive the data from the source database to the destination database in mosip_archive db.
-
-## Archive jobs based on status code.
+## Archive jobs based on status code(Recommended way to archive).
 Run the following command to run the archive jobs based on status code
     
 ```
 sh mosip_archive_credential_table_base-on-status-code.sh
 ```
- set the status code to archive the data in mosip_archive_credential.ini file.
+Note:- To Archive based on status_code make sure
+the required status is added to the [mosip_archive_credential.ini](mosip_archive_credential.ini).
+
+ Set the status code to archive the data in [mosip_archive_credential.ini](mosip_archive_credential.ini) file.
  ```credential.endstatus.list=STORED,printing```
 Above property will archive the mosip_credential table data based on the status code.
 
 ```credential.status.time.map=ISSUED:2,FAILED:7```
 Above property will archive the mosip_credential table data based on the status code and number of days.
+
+## Archive jobs based on no of days
+Run the following command to run the archive jobs based on no of days
+
+```
+sh mosip_archive_credential_table_base-on-no-of-days.sh
+```
+set the no of days to archive the data in [mosip_archive_credential.ini](mosip_archive_credential.ini) file.
+
+```archive_older_than_days = 7```
+This will archive the data from the source database to the destination database in mosip_archive db.
 
 ## Properties file variable details
 **source_db_serverip:** Contains the source database server ip. 
