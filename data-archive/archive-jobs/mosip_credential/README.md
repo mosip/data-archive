@@ -1,6 +1,5 @@
 # Archival Jobs
-The Jobs will archive the data from the source database to the destination database
-in mosip_credential db.
+The Jobs will archive the data from the **credential_transactions** table in mosip_credential db to the table in archive database.
 
 ## Pre-requisite steps:
 
@@ -8,35 +7,37 @@ in mosip_credential db.
 2. Once we have the mosip_archive DB ready we need to continue with the archive_jobs.
 3. Install python3.9 virtual env.
 4. Switch to virtual env.
-5. Install required psycopg dependency. `sudo yum install python3-psycopg
+5. Install required psycopg dependency. `sudo yum install python3-psycopg.
 
 
-## Archive jobs based on status code(Recommended way to archive).
+## Archive jobs based on status code (Recommended):
 Run the following command to run the archive jobs based on status code
     
 ```
 sh mosip_archive_credential_table_base-on-status-code.sh
 ```
-Note:- To Archive based on status_code make sure
-the required status is added to the [mosip_archive_credential.ini](mosip_archive_credential.ini).
+Note:- To archive the table based on status_code make sure
+the required status codes are added to the configuration in [mosip_archive_credential.ini](mosip_archive_credential.ini).
 
- Set the status code to archive the data in [mosip_archive_credential.ini](mosip_archive_credential.ini) file.
+ Set the status code to archive the data as below:
+ 
  ```credential.endstatus.list=STORED,printing```
+
 Above property will archive the mosip_credential table data based on the status code.
 
 ```credential.status.time.map=ISSUED:2,FAILED:7```
-Above property will archive the mosip_credential table data based on the status code and number of days.
 
-## Archive jobs based on no of days
-Run the following command to run the archive jobs based on no of days
+Above property will archive the mosip_credential table data based on the status code and number of days after the records were created (cr_dtimes column).
+
+## Archive jobs based on no of days after the records were created:
+Run the following command to run the archive jobs based on no of days after the records were created (cr_dtimes coulmn)
 
 ```
 sh mosip_archive_credential_table_base-on-no-of-days.sh
 ```
-set the no of days to archive the data in [mosip_archive_credential.ini](mosip_archive_credential.ini) file.
+Set the no of days to archive the data in [mosip_archive_credential.ini](mosip_archive_credential.ini) file.
 
 ```archive_older_than_days = 7```
-This will archive the data from the source database to the destination database in mosip_archive db.
 
 ## Properties file variable details
 **source_db_serverip:** Contains the source database server ip. 
