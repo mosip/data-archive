@@ -38,6 +38,12 @@ Run the following command to run the archive jobs based on no of days after the 
 ```
 sh mosip_archive_credential_table_base-on-no-of-days.sh
 ```
+Note:- To archive the table based on number of days make sure
+the required archive_older_than_days is added to the configuration in [mosip_archive_credential.ini](mosip_archive_credential.ini).
+For Example:- If today Date is 01-Sept-2022 then if
+```archive_older_than_days=2```.
+Then it will archive records 2 days before that is before 31-Aug-2022.
+
 set the no of days to archive the data in [mosip_archive_credential.ini](mosip_archive_credential.ini) file.
 ```archive_older_than_days = 7```
 
