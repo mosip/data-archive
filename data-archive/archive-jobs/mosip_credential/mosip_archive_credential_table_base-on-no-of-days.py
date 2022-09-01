@@ -79,7 +79,10 @@ def dataArchive():
         oldDays = dbparam["archive_older_than_days"]
 
         print(tableName)
-        select_query = "SELECT * FROM "+sschemaName+"."+tableName+" WHERE cr_dtimes < NOW() - INTERVAL '"+oldDays+" days'"
+        oldDays = int(oldDays) -1
+
+        select_query = "SELECT * FROM "+sschemaName+"."+tableName+" WHERE cr_dtimes < CURRENT_DATE - INTERVAL '"+str(oldDays)+" days'"
+
         sourceCur.execute(select_query)
         rows = sourceCur.fetchall()
         select_count = sourceCur.rowcount
