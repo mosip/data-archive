@@ -9,6 +9,9 @@ The Jobs will archive the data from the **credential_transactions** table in mos
 4. Switch to virtual env.
 5. Install required psycopg dependency. `sudo yum install python3-psycopg.
 
+#### Below are the 2 different ways of running the archival script.
+1. Archive jobs based on status code (Recommended).
+2. Archive jobs based on no of days after the records were created (Old script).
 
 ## Archive jobs based on status code (Recommended):
 Run the following command to run the archive jobs based on status code
@@ -26,11 +29,15 @@ Then it will archive records 2 days before that is before 31-Aug-2022.
  
  ```credential.endstatus.list=STORED,printing```
 
-Above property will archive the mosip_credential table data based on the status code.
+Above property will archive the mosip_credential table data based on the `credential.endstatus.list` property without any consideration on
+ created dates.
 
 ```credential.status.time.map=ISSUED:2,FAILED:7```
 
 Above property will archive the mosip_credential table data based on the status code and number of days after the records were created (cr_dtimes column).
+
+Note:- If same status is available in both `credential.endstatus.list` and `credential.status.time.map` then that status will be archived
+without any consideration on created dates.
 
 ## Archive jobs based on no of days after the records were created:
 Run the following command to run the archive jobs based on no of days after the records were created (cr_dtimes coulmn)
