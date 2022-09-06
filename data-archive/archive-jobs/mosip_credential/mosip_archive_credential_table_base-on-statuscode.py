@@ -116,7 +116,7 @@ def dataArchive():
         for(statusCode,statusTime) in credentialStatusTimeMap.items():
             print(statusCode)
             print(statusTime)
-            query = "SELECT * FROM "+sschemaName+"."+tableName+" WHERE status_code ='"+statusCode+"' and cr_dtimes < NOW() - INTERVAL '"+statusTime+" days';"
+            query = "SELECT * FROM "+sschemaName+"."+tableName+" WHERE status_code ='"+statusCode+"' and cr_dtimes < CURRENT_DATE - INTERVAL '"+str(int(statusTime)-1)+" days';"
             moveRecords(query, sourceCur, aschemaName, tableName, archiveCur, archiveConn, sschemaName, sourseConn)
 
         credentialEndStatusListString = convertStringToLiteralString(credentialEndStatusList)
