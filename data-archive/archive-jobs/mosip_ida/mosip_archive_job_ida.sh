@@ -8,9 +8,6 @@
 ### -- Modified Date        Modified By         Comments / Remarks
 ### -- ----------------------------------------------------------------------------------------
 
-python mosip_archive_ida_table1.py &
-sleep 5m
-
-python mosip_archive_ida_table2.py &
+python mosip_archive_ida.py
 
 #===============================================================================================
