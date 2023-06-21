@@ -1,4 +1,4 @@
-# Use a official Python runtime as the base image
+# Use an official Python runtime as the base image
 FROM python:3.9
 
 # Set the working directory in the container
@@ -8,10 +8,9 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Install the Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Copy the Python script and configuration files to the container
-COPY mosip_archive_ida.py mosip_archive_ida.ini ./
+COPY mosip_archive_ida.py /app
 
-# Run the Python script when the container launches
-CMD ["python", "mosip_archive_ida.py"]
+# Set the entrypoint command to run the Python script with the environment variable
+CMD ["python3", "mosip_archive_ida.py", "--config", "/app/mosip_archive_ida.ini"]
