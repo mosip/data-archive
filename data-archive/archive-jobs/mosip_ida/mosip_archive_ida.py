@@ -54,24 +54,61 @@ def dataArchive():
         tables = [
             {
                 'name': dbparam["archive_table1"],
-                'id_column': 'id'
+                'id_column': 'id',
+                'older_than_days': int(dbparam["archive_table1_older_than_days"])
             },
             {
                 'name': dbparam["archive_table2"],
-                'id_column': 'id'
+                'id_column': 'id',
+                'older_than_days': int(dbparam["archive_table2_older_than_days"])
+            },
+            {
+                'name': dbparam["archive_table3"],
+                'id_column': 'job_execution_id',
+                'older_than_days': int(dbparam["archive_table3_older_than_days"])
+            },
+            {
+                'name': dbparam["archive_table4"],
+                'id_column': 'job_execution_id',
+                'older_than_days': int(dbparam["archive_table4_older_than_days"])
+            },
+            {
+                'name': dbparam["archive_table5"],
+                'id_column': 'job_execution_id',
+                'older_than_days': int(dbparam["archive_table5_older_than_days"])
+            },
+            {
+                'name': dbparam["archive_table6"],
+                'id_column': 'job_execution_id',
+                'older_than_days': int(dbparam["archive_table6_older_than_days"])
+            },
+            {
+                'name': dbparam["archive_table7"],
+                'id_column': 'step_execution_id',
+                'older_than_days': int(dbparam["archive_table7_older_than_days"])
+            },
+            {
+                'name': dbparam["archive_table8"],
+                'id_column': 'step_execution_id',
+                'older_than_days': int(dbparam["archive_table8_older_than_days"])
+            },
+            {
+                'name': dbparam["archive_table9"],
+                'id_column': 'event_id',
+                'older_than_days': int(dbparam["archive_table9_older_than_days"])
             }
         ]
 
         sschemaName = dbparam["source_schema_name"]
         aschemaName = dbparam["archive_schema_name"]
-        oldDays = dbparam["archive_older_than_days"]
 
         for table in tables:
             tableName = table['name']
             idColumn = table['id_column']
+            olderThanDays = table['older_than_days']
 
             print(tableName)
-            select_query = "SELECT * FROM {0}.{1} WHERE cr_dtimes < NOW() - INTERVAL '{2} days'".format(sschemaName, tableName, oldDays)
+            select_query = "SELECT * FROM {0}.{1} WHERE cr_dtimes < NOW() - INTERVAL '{2} days'".format(sschemaName, tableName, olderThanDays)
             sourceCur.execute(select_query)
             rows = sourceCur.fetchall()
             select_count = sourceCur.rowcount
