@@ -17,7 +17,7 @@ CREATE TABLE archive.auth_transaction(
 	request_dtimes timestamp NOT NULL,
 	response_dtimes timestamp NOT NULL,
 	request_trn_id character varying(64),
-	auth_type_code character varying(36) NOT NULL,
+	auth_type_code character varying(128) NOT NULL,
 	status_code character varying(36) NOT NULL,
 	status_comment character varying(1024),
 	lang_code character varying(3) NOT NULL,
@@ -34,12 +34,15 @@ CREATE TABLE archive.auth_transaction(
 	cr_dtimes timestamp NOT NULL,
 	upd_by character varying(256),
 	upd_dtimes timestamp,
-	is_deleted boolean,
+	is_deleted boolean NOT NULL DEFAULT FALSE,
 	del_dtimes timestamp,
 	CONSTRAINT pk_authtrn_id PRIMARY KEY (id)
 
 );
 -- ddl-end --
+--index section starts----
+CREATE INDEX ind_reqtrnid_dtimes_tknid ON archive.auth_transaction (request_trn_id, request_dtimes, token_id,cr_dtimes, auth_type_code);
+--index section ends------
 COMMENT ON TABLE archive.auth_transaction IS 'Authentication Transaction : To track all authentication transactions steps / stages in the process flow.';
 -- ddl-end --
 COMMENT ON COLUMN archive.auth_transaction.id IS 'ID: This is unique transaction id assigned for each authentication transaction';
