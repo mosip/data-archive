@@ -1,22 +1,35 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import sys
-import configparser
 import psycopg2
+import configparser
 import datetime
 from configparser import ConfigParser
 from datetime import datetime
 
-def config(filename='mosip_archive_ida.ini', section='MOSIP-DB-SECTION'):
+def config(filename='mosip_archive_ida.ini'):
     parser = ConfigParser()
     parser.read(filename)
     dbparam = {}
-    if parser.has_section(section):
-        params = parser.items(section)
+
+    if parser.has_section('MOSIP-DB-SECTION'):
+        params = parser.items('MOSIP-DB-SECTION')
         for param in params:
             dbparam[param[0]] = param[1]
     else:
-        raise Exception('Section {0} not found in the {1} file'.format(section, filename))
+        raise Exception('Section [MOSIP-DB-SECTION] not found in the {0} file'.format(filename))
+
+    if parser.has_section('ARCHIVE'):
+        tables = parser.items('ARCHIVE')
+        dbparam['tables'] = {}
+        for table in tables:
+            table_name, table_info = table
+            if ',' in table_info:
+                id_column, retention_period = table_info.split(',')
+                retention_period = int(''.join(filter(str.isdigit, retention_period)))  # Remove non-digit characters
+                dbparam['tables'][table_name] = {'id_column': id_column.strip(), 'retention_period': retention_period}
+    else:
+        raise Exception('Section [ARCHIVE] not found in the {0} file'.format(filename))
 
     return dbparam
 
@@ -33,6 +46,8 @@ def getValues(row):
 def dataArchive():
     sourceConn = None
     archiveConn = None
+    sourceCur = None
+    archiveCur = None
     try:
         dbparam = config()
 
@@ -51,94 +66,49 @@ def dataArchive():
         sourceCur = sourceConn.cursor()
         archiveCur = archiveConn.cursor()
 
-        tables = [
-            {
-                'name': dbparam["archive_table1"],
-                'id_column': 'id',
-                'older_than_days': int(dbparam["archive_table1_older_than_days"])
-            },
-            {
-                'name': dbparam["archive_table2"],
-                'id_column': 'id',
-                'older_than_days': int(dbparam["archive_table2_older_than_days"])
-            },
-            {
-                'name': dbparam["archive_table3"],
-                'id_column': 'job_execution_id',
-                'older_than_days': int(dbparam["archive_table3_older_than_days"])
-            },
-            {
-                'name': dbparam["archive_table4"],
-                'id_column': 'job_execution_id',
-                'older_than_days': int(dbparam["archive_table4_older_than_days"])
-            },
-            {
-                'name': dbparam["archive_table5"],
-                'id_column': 'job_execution_id',
-                'older_than_days': int(dbparam["archive_table5_older_than_days"])
-            },
-            {
-                'name': dbparam["archive_table6"],
-                'id_column': 'job_execution_id',
-                'older_than_days': int(dbparam["archive_table6_older_than_days"])
-            },
-            {
-                'name': dbparam["archive_table7"],
-                'id_column': 'step_execution_id',
-                'older_than_days': int(dbparam["archive_table7_older_than_days"])
-            },
-            {
-                'name': dbparam["archive_table8"],
-                'id_column': 'step_execution_id',
-                'older_than_days': int(dbparam["archive_table8_older_than_days"])
-            },
-            {
-                'name': dbparam["archive_table9"],
-                'id_column': 'event_id',
-                'older_than_days': int(dbparam["archive_table9_older_than_days"])
-            }
-        ]
-
         sschemaName = dbparam["source_schema_name"]
         aschemaName = dbparam["archive_schema_name"]
 
-        for table in tables:
-            tableName = table['name']
-            idColumn = table['id_column']
-            olderThanDays = table['older_than_days']
+        for table_name, table_info in dbparam['tables'].items():
+            id_column = table_info['id_column']
+            retention_period = table_info['retention_period']
 
-            print(tableName)
-            select_query = "SELECT * FROM {0}.{1} WHERE cr_dtimes < NOW() - INTERVAL '{2} days'".format(sschemaName, tableName, olderThanDays)
+            print(table_name)
+            select_query = "SELECT * FROM {0}.{1} WHERE cr_dtimes < NOW() - INTERVAL '{2} days'".format(sschemaName, table_name, retention_period)
             sourceCur.execute(select_query)
             rows = sourceCur.fetchall()
             select_count = sourceCur.rowcount
-            print(select_count, ": Record(s) selected for archive from", tableName)
+            print(select_count, ": Record(s) selected for archive from", table_name)
 
             if select_count > 0:
                 for row in rows:
                     rowValues = getValues(row)
-                    insert_query = "INSERT INTO {0}.{1} VALUES ({2})".format(aschemaName, tableName, rowValues)
+                    insert_query = "INSERT INTO {0}.{1} VALUES ({2}) ON CONFLICT DO NOTHING".format(aschemaName, table_name, rowValues)
                     archiveCur.execute(insert_query)
                     archiveConn.commit()
                     insert_count = archiveCur.rowcount
-                    print(insert_count, ": Record inserted successfully")
+                    if insert_count == 0:
+                        print("Skipping duplicate record with ID:", row[0])
+                    else:
+                        print(insert_count, ": Record inserted successfully")
 
-                    if insert_count > 0:
-                        delete_query = "DELETE FROM {0}.{1} WHERE {2} = '{3}'".format(sschemaName, tableName, idColumn, row[0])
-                        sourceCur.execute(delete_query)
-                        sourceConn.commit()
-                        delete_count = sourceCur.rowcount
-                        print(delete_count, ": Record(s) deleted successfully")
+                    delete_query = 'DELETE FROM "{0}"."{1}" WHERE "{2}" = %s'.format(sschemaName, table_name, id_column)
+                    sourceCur.execute(delete_query, (row[0],))
+                    sourceConn.commit()
+                    delete_count = sourceCur.rowcount
+                    print(delete_count, ": Record(s) deleted successfully")
 
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
     finally:
-        if sourceConn is not None:
+        if sourceCur is not None:
             sourceCur.close()
+        if sourceConn is not None:
             sourceConn.close()
             print('Source database connection closed.')
-        if archiveConn is not None:
+        if archiveCur is not None:
             archiveCur.close()
+        if archiveConn is not None:
             archiveConn.close()
             print('Archive database connection closed.')
 
