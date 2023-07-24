@@ -13,12 +13,12 @@ ENV PATH="/venv/bin:$PATH"
 # Install the Python dependencies within the virtual environment
 RUN pip install --no-cache-dir -r requirements.txt
 # Copy the script and the configuration file to the container
-COPY mosip_archive_ida.py /app/mosip_archive_ida.py
+COPY mosip_archive_ida_table.py /app/mosip_archive_ida_table.py
 COPY mosip_archive_ida.ini /app/mosip_archive_ida.ini
 
 # Make the script executable
-RUN chmod +x mosip_archive_ida.py
+RUN chmod +x mosip_archive_ida_table.py
 
 # Run the script when the container launches
-CMD ["python3", "mosip_archive_ida.py"]
+CMD ["python3", "mosip_archive_ida_table.py"]
 
