@@ -22,12 +22,21 @@ def config(filename='mosip_archive_ida.ini'):
     if parser.has_section('ARCHIVE'):
         tables = parser.items('ARCHIVE')
         dbparam['tables'] = {}
-        for table in tables:
-            table_name, table_info = table
-            if ',' in table_info:
-                id_column, retention_period = table_info.split(',')
-                retention_period = int(''.join(filter(str.isdigit, retention_period)))  # Remove non-digit characters
-                dbparam['tables'][table_name] = {'id_column': id_column.strip(), 'retention_period': retention_period}
+        for table, table_info in tables:
+            if table_info:
+                columns = table_info.split(',')
+                if len(columns) != 3:
+                    raise Exception('Invalid number of parameters for table {0} in the [ARCHIVE] section'.format(table))
+                date_column, id_column, retention_period = columns
+                retention_period = int(''.join(filter(str.isdigit, retention_period.strip())))  # Remove non-digit characters
+                table_info_dict = {
+                    'id_column': id_column.strip(),
+                    'retention_period': retention_period,
+                    'date_column': date_column.strip(),
+                }
+                dbparam['tables'][table] = table_info_dict
+            else:
+                raise Exception('Invalid parameters for table {0} in the [ARCHIVE] section'.format(table))
     else:
         raise Exception('Section [ARCHIVE] not found in the {0} file'.format(filename))
 
@@ -72,9 +81,10 @@ def dataArchive():
         for table_name, table_info in dbparam['tables'].items():
             id_column = table_info['id_column']
             retention_period = table_info['retention_period']
+            date_column = table_info['date_column']
 
             print(table_name)
-            select_query = "SELECT * FROM {0}.{1} WHERE cr_dtimes < NOW() - INTERVAL '{2} days'".format(sschemaName, table_name, retention_period)
+            select_query = "SELECT * FROM {0}.{1} WHERE {2} < NOW() - INTERVAL '{3} days'".format(sschemaName, table_name, date_column, retention_period)
             sourceCur.execute(select_query)
             rows = sourceCur.fetchall()
             select_count = sourceCur.rowcount
