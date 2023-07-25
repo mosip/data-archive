@@ -24,12 +24,15 @@ CREATE TABLE archive.otp_transaction(
 	cr_dtimes timestamp NOT NULL,
 	upd_by character varying(256),
 	upd_dtimes timestamp,
-	is_deleted boolean,
+	is_deleted boolean DEFAULT FALSE,
 	del_dtimes timestamp,
 	CONSTRAINT pk_otpt_id PRIMARY KEY (id)
 
 );
 -- ddl-end --
+--index section starts----
+CREATE INDEX ind_otphsh ON archive.otp_transaction (otp_hash,status_code);
+--index section ends------
 COMMENT ON TABLE archive.otp_transaction IS 'OTP Transaction: All OTP related data and validation details are maintained here for ID Authentication module.';
 -- ddl-end --
 COMMENT ON COLUMN archive.otp_transaction.id IS 'ID: Key alias id is a unique identifier (UUID) used as an alias of the encryption key stored in keystore like HSM (hardware security module).';

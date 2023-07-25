@@ -1,0 +1,4 @@
+python3 mosip_archive_ida_table.py
+python3 mosip_archive_idrepo_table.py
+python3 mosip_archive_regprc_table.py
+python3 mosip_archive_resident_table.py

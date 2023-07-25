@@ -1,3 +1,4 @@
+
 ### -- ---------------------------------------------------------------------------------------------------------
 ### -- Script Name		: ID Repository Archive Job
 ### -- Deploy Module 	: Pre registration
@@ -8,12 +9,6 @@
 ### -- Modified Date        Modified By         Comments / Remarks
 ### -- ----------------------------------------------------------------------------------------
 
-python mosip_archive_idrepo_table1.py &
-sleep 5m
-
-python mosip_archive_idrepo_table2.py &
-sleep 5m
-
-python mosip_archive_idrepo_table3.py &
+python3 mosip_archive_idrepo_table.py &
 
 #===============================================================================================
