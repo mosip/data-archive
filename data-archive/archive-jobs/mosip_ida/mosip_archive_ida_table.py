@@ -8,7 +8,7 @@ import datetime
 from configparser import ConfigParser
 from datetime import datetime
 
-def config(filename='mosip_archive_ida.ini'):
+def config(filename='mosip_archive.ini'):
     parser = ConfigParser()
     parser.read(filename)
     dbparam = {}
