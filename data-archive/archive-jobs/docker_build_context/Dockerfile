@@ -1,7 +1,7 @@
 # Use an official Python runtime as the base image
 FROM python:3.9
 # Set the working directory in the container
-WORKDIR /archive
+WORKDIR /home/mosip/data-archive
 #copy all python script db to working dir
 COPY mosip_archive_table.py .
 COPY entrypoint.sh .
