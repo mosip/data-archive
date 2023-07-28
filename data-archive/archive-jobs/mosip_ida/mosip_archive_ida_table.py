@@ -1,4 +1,3 @@
-#updated
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import sys
@@ -26,15 +25,22 @@ def config(filename='mosip_archive.ini'):
         for table, table_info in tables:
             if table_info:
                 columns = table_info.split(',')
-                if len(columns) != 3:
+                if len(columns) == 1:  # For tables with only id_column specified
+                    id_column = columns[0].strip()
+                    table_info_dict = {
+                        'id_column': id_column,
+                    }
+                elif len(columns) == 3:  # For tables with date_column, id_column, and retention specified
+                    date_column, id_column, retention_period = [col.strip() for col in columns]
+                    retention_period = int(''.join(filter(str.isdigit, retention_period)))  # Remove non-digit characters
+                    table_info_dict = {
+                        'id_column': id_column,
+                        'retention_period': retention_period,
+                        'date_column': date_column,
+                    }
+                else:
                     raise Exception('Invalid number of parameters for table {0} in the [ARCHIVE] section'.format(table))
-                date_column, id_column, retention_period = columns
-                retention_period = int(''.join(filter(str.isdigit, retention_period.strip())))  # Remove non-digit characters
-                table_info_dict = {
-                    'id_column': id_column.strip(),
-                    'retention_period': retention_period,
-                    'date_column': date_column.strip(),
-                }
+
                 dbparam['tables'][table] = table_info_dict
             else:
                 raise Exception('Invalid parameters for table {0} in the [ARCHIVE] section'.format(table))
@@ -80,12 +86,15 @@ def dataArchive():
         aschemaName = dbparam["archive_schema_name"]
 
         for table_name, table_info in dbparam['tables'].items():
-            id_column = table_info['id_column']
-            retention_period = table_info['retention_period']
-            date_column = table_info['date_column']
+            if 'date_column' in table_info and 'retention_period' in table_info:
+                date_column = table_info['date_column']
+                retention_period = table_info['retention_period']
+                select_query = "SELECT * FROM {0}.{1} WHERE {2} < NOW() - INTERVAL '{3} days'".format(sschemaName, table_name, date_column, retention_period)
+                id_column = table_info['id_column']  # Assign id_column for tables with date_column and retention
+            else:
+                id_column = table_info['id_column']
+                select_query = "SELECT * FROM {0}.{1}".format(sschemaName, table_name)
 
-            print(table_name)
-            select_query = "SELECT * FROM {0}.{1} WHERE {2} < NOW() - INTERVAL '{3} days'".format(sschemaName, table_name, date_column, retention_period)
             sourceCur.execute(select_query)
             rows = sourceCur.fetchall()
             select_count = sourceCur.rowcount
