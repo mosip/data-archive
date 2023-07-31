@@ -1,9 +1,20 @@
 \c mosip_archive sysadmin
 
+\ir ddl/archive-anonymous_profile.sql
 \ir ddl/archive-app_audit_log.sql
 \ir ddl/archive-applicant_demographic_consumed.sql
 \ir ddl/archive-applicant_document_consumed.sql
 \ir ddl/archive-auth_transaction.sql
+\ir ddl/archive-batch_job_execution.sql
+\ir ddl/archive-batch_job_execution_context.sql
+\ir ddl/archive-batch_job_execution_params.sql
+\ir ddl/archive-batch_job_instance.sql
+\ir ddl/archive-batch_step_execution.sql
+\ir ddl/archive-batch_step_execution_context.sql
+\ir ddl/archive-credential_event_store.sql
+\ir ddl/archive-idrepo-anonymous_profile.sql
+\ir ddl/archive-idrepo-credential_request_status.sql
+\ir ddl/archive-idrepo-uin_draft.sql
 \ir ddl/archive-otp_transaction.sql
 \ir ddl/archive-processed_prereg_list.sql
 \ir ddl/archive-reg_appointment_consumed.sql
@@ -12,8 +23,11 @@
 \ir ddl/archive-registered_authdevice_master_h.sql
 \ir ddl/archive-registered_regdevice_master_h.sql
 \ir ddl/archive-registration_transaction.sql
+\ir ddl/archive-resident_grievance_ticket.sql
+\ir ddl/archive-resident_session.sql
+\ir ddl/archive-resident_transaction.sql
+\ir ddl/archive-resident_user_actions.sql
 \ir ddl/archive-uin_biometric_h.sql
 \ir ddl/archive-uin_document_h.sql
 \ir ddl/archive-uin_h.sql
 \ir ddl/archive-vid.sql
-
