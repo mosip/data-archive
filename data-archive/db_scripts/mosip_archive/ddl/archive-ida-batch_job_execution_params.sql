@@ -1,8 +1,8 @@
--- Table: archive.batch_job_execution_params
+-- Table: mosip_ida_batch_job_execution_params
 
--- DROP TABLE archive.batch_job_execution_params;
+-- DROP TABLE archive.mosip_ida_batch_job_execution_params;
 
-CREATE TABLE archive.batch_job_execution_params  (
+CREATE TABLE archive.mosip_ida_batch_job_execution_params  (
 	JOB_EXECUTION_ID BIGINT NOT NULL ,
 	TYPE_CD VARCHAR(6) NOT NULL ,
 	KEY_NAME VARCHAR(100) NOT NULL ,

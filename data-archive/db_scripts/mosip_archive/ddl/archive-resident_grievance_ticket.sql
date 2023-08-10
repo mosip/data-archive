@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------------------------------
 
 -- This Table is used to save the  resident_grievance_ticket table values.
-CREATE TABLE archive.resident_grievance_ticket(
+CREATE TABLE archive.mosip_resident_grievance_ticket(
     id VARCHAR(64) NOT NULL,
     eventId VARCHAR(64) NOT NULL,
     name VARCHAR(256) NOT NULL,
@@ -31,20 +31,20 @@ CREATE TABLE archive.resident_grievance_ticket(
     CONSTRAINT pk_resgrev_id PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE archive.resident_grievance_ticket IS 'This Table is used to save the  resident_grievance_ticket table values.';
-COMMENT ON COLUMN archive.resident_grievance_ticket.id IS 'Unique Id.';
-COMMENT ON COLUMN archive.resident_grievance_ticket.eventId IS 'Unique event id.';
-COMMENT ON COLUMN archive.resident_grievance_ticket.emailId IS 'Unique email id.';
-COMMENT ON COLUMN archive.resident_grievance_ticket.alternateEmailId IS 'Alternate email id.';
-COMMENT ON COLUMN archive.resident_grievance_ticket.phoneNo IS 'Phone number.';
-COMMENT ON COLUMN archive.resident_grievance_ticket.alternatePhoneNo IS 'Alternate Phone number.';
-COMMENT ON COLUMN archive.resident_grievance_ticket.message IS 'Message.';
-COMMENT ON COLUMN archive.resident_grievance_ticket.status IS 'status.';
-COMMENT ON COLUMN archive.resident_grievance_ticket.cr_by IS 'created by.';
-COMMENT ON COLUMN archive.resident_grievance_ticket.cr_dtimes IS 'created date and time.';
-COMMENT ON COLUMN archive.resident_grievance_ticket.upd_by IS 'updated by.';
-COMMENT ON COLUMN archive.resident_grievance_ticket.upd_dtimes IS 'updated date and time.';
-COMMENT ON COLUMN archive.resident_grievance_ticket.is_deleted IS 'is deleted.';
-COMMENT ON COLUMN archive.resident_grievance_ticket.del_dtimes IS 'Deleted time-stamp.';
+COMMENT ON TABLE archive.mosip_resident_grievance_ticket IS 'This Table is used to save the  resident_grievance_ticket table values.';
+COMMENT ON COLUMN archive.mosip_resident_grievance_ticket.id IS 'Unique Id.';
+COMMENT ON COLUMN archive.mosip_resident_grievance_ticket.eventId IS 'Unique event id.';
+COMMENT ON COLUMN archive.mosip_resident_grievance_ticket.emailId IS 'Unique email id.';
+COMMENT ON COLUMN archive.mosip_resident_grievance_ticket.alternateEmailId IS 'Alternate email id.';
+COMMENT ON COLUMN archive.mosip_resident_grievance_ticket.phoneNo IS 'Phone number.';
+COMMENT ON COLUMN archive.mosip_resident_grievance_ticket.alternatePhoneNo IS 'Alternate Phone number.';
+COMMENT ON COLUMN archive.mosip_resident_grievance_ticket.message IS 'Message.';
+COMMENT ON COLUMN archive.mosip_resident_grievance_ticket.status IS 'status.';
+COMMENT ON COLUMN archive.mosip_resident_grievance_ticket.cr_by IS 'created by.';
+COMMENT ON COLUMN archive.mosip_resident_grievance_ticket.cr_dtimes IS 'created date and time.';
+COMMENT ON COLUMN archive.mosip_resident_grievance_ticket.upd_by IS 'updated by.';
+COMMENT ON COLUMN archive.mosip_resident_grievance_ticket.upd_dtimes IS 'updated date and time.';
+COMMENT ON COLUMN archive.mosip_resident_grievance_ticket.is_deleted IS 'is deleted.';
+COMMENT ON COLUMN archive.mosip_resident_grievance_ticket.del_dtimes IS 'Deleted time-stamp.';
 
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -1,8 +1,8 @@
--- Table: archive.batch_job_execution
+-- Table: archive.mosip_credential_batch_job_execution
 
--- DROP TABLE archive.batch_job_execution;
+-- DROP TABLE archive.mosip_credential_batch_job_execution;
 
-CREATE TABLE archive.batch_job_execution  (
+CREATE TABLE archive.mosip_credential_batch_job_execution  (
   JOB_EXECUTION_ID BIGINT  PRIMARY KEY ,
   VERSION BIGINT,
   JOB_INSTANCE_ID BIGINT NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE archive.batch_job_execution  (
   EXIT_MESSAGE VARCHAR(2500),
   LAST_UPDATED TIMESTAMP,
   JOB_CONFIGURATION_LOCATION VARCHAR(2500) NULL
-)
+) 
 WITH (
     OIDS = FALSE
 );

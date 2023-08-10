@@ -1,8 +1,8 @@
--- Table: archive.batch_job_execution_context
+-- Table: archive.mosip_ida_batch_job_execution_context
 
--- DROP TABLE archive.batch_job_execution_context;
+-- DROP TABLE archive.mosip_ida_batch_job_execution_context;
 
-CREATE TABLE archive.batch_job_execution_context
+CREATE TABLE archive.mosip_ida_batch_job_execution_context
 (
     job_execution_id bigint NOT NULL,
     short_context character varying(2500) COLLATE pg_catalog."default" NOT NULL,

@@ -1,8 +1,8 @@
--- Table: archive.batch_step_execution
+-- Table: archive.mosip_ida_batch_step_execution
 
--- DROP TABLE archive.batch_step_execution;
+-- DROP TABLE archive.mosip_ida_batch_step_execution;
 
-CREATE TABLE archive.batch_step_execution  (
+CREATE TABLE archive.mosip_ida_batch_step_execution  (
   STEP_EXECUTION_ID BIGINT  PRIMARY KEY ,
   VERSION BIGINT NOT NULL,
   STEP_NAME VARCHAR(100) NOT NULL,
