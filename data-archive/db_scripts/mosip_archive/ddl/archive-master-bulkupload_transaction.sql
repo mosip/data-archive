@@ -1,7 +1,7 @@
 
--- object: archive.bulkupload_transaction | type: TABLE --
--- DROP TABLE IF EXISTS archive.bulkupload_transaction CASCADE;
-CREATE TABLE archive.bulkupload_transaction(
+-- object: archive.mosip_master_bulkupload_transaction | type: TABLE --
+-- DROP TABLE IF EXISTS archive.mosip_master_bulkupload_transaction CASCADE;
+CREATE TABLE archive.mosip_master_bulkupload_transaction(
 	id character varying(36) NOT NULL,
 	entity_name character varying(64) NOT NULL,
 	upload_operation character varying(64) NOT NULL,
@@ -23,39 +23,39 @@ CREATE TABLE archive.bulkupload_transaction(
 
 );
 -- ddl-end --
-COMMENT ON TABLE archive.bulkupload_transaction IS 'Bulk Upload Transaction:  This transaction table to store all bulk upload transactions, This includes uploading master table data as well as packets uploads to the registration processor.';
+COMMENT ON TABLE archive.mosip_master_bulkupload_transaction IS 'Bulk Upload Transaction:  This transaction table to store all bulk upload transactions, This includes uploading master table data as well as packets uploads to the registration processor.';
 -- ddl-end --
-COMMENT ON COLUMN archive.bulkupload_transaction.id IS 'ID: Unigue ID is assign to bulk data upload transaction. Each transaction will be identifieds by this transaction id.';
+COMMENT ON COLUMN archive.mosip_master_bulkupload_transaction.id IS 'ID: Unigue ID is assign to bulk data upload transaction. Each transaction will be identifieds by this transaction id.';
 -- ddl-end --
-COMMENT ON COLUMN archive.bulkupload_transaction.entity_name IS 'Entity Name: Name of an entity for which data is beeing uploaded, This can be master data table name or packet in case of packet upload.';
+COMMENT ON COLUMN archive.mosip_master_bulkupload_transaction.entity_name IS 'Entity Name: Name of an entity for which data is beeing uploaded, This can be master data table name or packet in case of packet upload.';
 -- ddl-end --
-COMMENT ON COLUMN archive.bulkupload_transaction.upload_operation IS 'Upload Operation: Operation of the bulk upload example operations can be insert, update, delete and packet-upload.';
+COMMENT ON COLUMN archive.mosip_master_bulkupload_transaction.upload_operation IS 'Upload Operation: Operation of the bulk upload example operations can be insert, update, delete and packet-upload.';
 -- ddl-end --
-COMMENT ON COLUMN archive.bulkupload_transaction.status_code IS 'Status Code: Status of the bulk upload transactions. For example... in-progress, success and failed transaction.';
+COMMENT ON COLUMN archive.mosip_master_bulkupload_transaction.status_code IS 'Status Code: Status of the bulk upload transactions. For example... in-progress, success and failed transaction.';
 -- ddl-end --
-COMMENT ON COLUMN archive.bulkupload_transaction.record_count IS 'Record Count: Number of records and packets has been uploaded in a transaction.';
+COMMENT ON COLUMN archive.mosip_master_bulkupload_transaction.record_count IS 'Record Count: Number of records and packets has been uploaded in a transaction.';
 -- ddl-end --
-COMMENT ON COLUMN archive.bulkupload_transaction.uploaded_by IS 'Uploaded By: The user detail of the person who is uploading the packets or master data.';
+COMMENT ON COLUMN archive.mosip_master_bulkupload_transaction.uploaded_by IS 'Uploaded By: The user detail of the person who is uploading the packets or master data.';
 -- ddl-end --
-COMMENT ON COLUMN archive.bulkupload_transaction.upload_category IS 'Upload Category: Upload category will be Master data csv or Packet';
+COMMENT ON COLUMN archive.mosip_master_bulkupload_transaction.upload_category IS 'Upload Category: Upload category will be Master data csv or Packet';
 -- ddl-end --
-COMMENT ON COLUMN archive.bulkupload_transaction.uploaded_dtimes IS 'Uploaded Date and Time: Date and time of the master data and packets are uploaded';
+COMMENT ON COLUMN archive.mosip_master_bulkupload_transaction.uploaded_dtimes IS 'Uploaded Date and Time: Date and time of the master data and packets are uploaded';
 -- ddl-end --
-COMMENT ON COLUMN archive.bulkupload_transaction.upload_description IS 'Upload Description: Bulk data upload description, This will have all details about the transaction including upload failure or success messages.';
+COMMENT ON COLUMN archive.mosip_master_bulkupload_transaction.upload_description IS 'Upload Description: Bulk data upload description, This will have all details about the transaction including upload failure or success messages.';
 -- ddl-end --
-COMMENT ON COLUMN archive.bulkupload_transaction.lang_code IS 'Language Code : For multilanguage implementation this attribute Refers master.language.code. The value of some of the attributes in current record is stored in this respective language.';
+COMMENT ON COLUMN archive.mosip_master_bulkupload_transaction.lang_code IS 'Language Code : For multilanguage implementation this attribute Refers master.language.code. The value of some of the attributes in current record is stored in this respective language.';
 -- ddl-end --
-COMMENT ON COLUMN archive.bulkupload_transaction.is_active IS 'IS_Active : Flag to mark whether the record/device is Active or In-active';
+COMMENT ON COLUMN archive.mosip_master_bulkupload_transaction.is_active IS 'IS_Active : Flag to mark whether the record/device is Active or In-active';
 -- ddl-end --
-COMMENT ON COLUMN archive.bulkupload_transaction.cr_by IS 'Created By : ID or name of the user who create / insert record';
+COMMENT ON COLUMN archive.mosip_master_bulkupload_transaction.cr_by IS 'Created By : ID or name of the user who create / insert record';
 -- ddl-end --
-COMMENT ON COLUMN archive.bulkupload_transaction.cr_dtimes IS 'Created DateTimestamp : Date and Timestamp when the record is created/inserted';
+COMMENT ON COLUMN archive.mosip_master_bulkupload_transaction.cr_dtimes IS 'Created DateTimestamp : Date and Timestamp when the record is created/inserted';
 -- ddl-end --
-COMMENT ON COLUMN archive.bulkupload_transaction.upd_by IS 'Updated By : ID or name of the user who update the record with new values';
+COMMENT ON COLUMN archive.mosip_master_bulkupload_transaction.upd_by IS 'Updated By : ID or name of the user who update the record with new values';
 -- ddl-end --
-COMMENT ON COLUMN archive.bulkupload_transaction.upd_dtimes IS 'Updated DateTimestamp : Date and Timestamp when any of the fields in the record is updated with new values.';
+COMMENT ON COLUMN archive.mosip_master_bulkupload_transaction.upd_dtimes IS 'Updated DateTimestamp : Date and Timestamp when any of the fields in the record is updated with new values.';
 -- ddl-end --
-COMMENT ON COLUMN archive.bulkupload_transaction.is_deleted IS 'IS_Deleted : Flag to mark whether the record is Soft deleted.';
+COMMENT ON COLUMN archive.mosip_master_bulkupload_transaction.is_deleted IS 'IS_Deleted : Flag to mark whether the record is Soft deleted.';
 -- ddl-end --
-COMMENT ON COLUMN archive.bulkupload_transaction.del_dtimes IS 'Deleted DateTimestamp : Date and Timestamp when the record is soft deleted with is_deleted=TRUE';
+COMMENT ON COLUMN archive.mosip_master_bulkupload_transaction.del_dtimes IS 'Deleted DateTimestamp : Date and Timestamp when the record is soft deleted with is_deleted=TRUE';
 -- ddl-end --

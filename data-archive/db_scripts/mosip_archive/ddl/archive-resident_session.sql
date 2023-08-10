@@ -12,7 +12,7 @@
 
 -- This Table is used to save the  user actions for the user actions table.
 
-CREATE TABLE archive.resident_session(
+CREATE TABLE archive.mosip_resident_session(
 	session_id character varying(128) NOT NULL,
     ida_token character varying(128) NOT NULL,
     login_dtimes timestamp,
@@ -22,10 +22,13 @@ CREATE TABLE archive.resident_session(
     CONSTRAINT pk_session_id PRIMARY KEY (session_id)
 );
 
-COMMENT ON TABLE resident_session IS 'This Table is used to save the  user sessions.';
-COMMENT ON COLUMN resident_session.session_id IS 'The unique session identifier for each login';
-COMMENT ON COLUMN resident_session.ida_token IS 'The unique identifier for each user';
-COMMENT ON COLUMN resident_session.login_dtimes IS 'The time when the user last logged in';
-COMMENT ON COLUMN resident_session.ip_address IS 'The ip_address of device from which the user logged in';
-COMMENT ON COLUMN resident_session.host IS 'The host of the site';
-COMMENT ON COLUMN resident_session.machine_type IS 'The OS of device used for accessing the portal/app';
+COMMENT ON TABLE archive.mosip_resident_session IS 'This Table is used to save the  user sessions.';
+COMMENT ON COLUMN archive.mosip_resident_session.session_id IS 'The unique session identifier for each login';
+COMMENT ON COLUMN archive.mosip_resident_session.ida_token IS 'The unique identifier for each user';
+COMMENT ON COLUMN archive.mosip_resident_session.login_dtimes IS 'The time when the user last logged in';
+COMMENT ON COLUMN archive.mosip_resident_session.ip_address IS 'The ip_address of device from which the user logged in';
+COMMENT ON COLUMN archive.mosip_resident_session.host IS 'The host of the site';
+COMMENT ON COLUMN archive.mosip_resident_session.machine_type IS 'The OS of device used for accessing the portal/app';
+
+-- Adding index to ida_token column
+CREATE INDEX idx_resident_session_ida_token ON archive.mosip_resident_session (ida_token);

@@ -1,8 +1,8 @@
 
 
--- object: archive.registration_center_h | type: TABLE --
--- DROP TABLE IF EXISTS archive.registration_center_h CASCADE;
-CREATE TABLE archive.registration_center_h(
+-- object: archive.mosip_master_registration_center_h | type: TABLE --
+-- DROP TABLE IF EXISTS archive.mosip_master_registration_center_h CASCADE;
+CREATE TABLE archive.mosip_master_registration_center_h(
 	id character varying(10) NOT NULL,
 	name character varying(128) NOT NULL,
 	cntrtyp_code character varying(36),
@@ -37,66 +37,65 @@ CREATE TABLE archive.registration_center_h(
 
 );
 -- ddl-end --
-COMMENT ON TABLE archive.registration_center_h IS 'Registration Center History : This to track changes to master record whenever there is an INSERT/UPDATE/DELETE ( soft delete ), Effective DateTimestamp is used for identifying latest or point in time information. Refer master.registration_center table description for details.';
+COMMENT ON TABLE archive.mosip_master_registration_center_h IS 'Registration Center History : This to track changes to master record whenever there is an INSERT/UPDATE/DELETE ( soft delete ), Effective DateTimestamp is used for identifying latest or point in time information. Refer master.registration_center table description for details.';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.id IS 'Registration Center ID : Unique ID generated / assigned for a registration center';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.id IS 'Registration Center ID : Unique ID generated / assigned for a registration center';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.name IS 'Name : Registration center name';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.name IS 'Name : Registration center name';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.cntrtyp_code IS 'Center Type Code : different types of registration centers. Refers master.reg_center_type.code';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.cntrtyp_code IS 'Center Type Code : different types of registration centers. Refers master.reg_center_type.code';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.addr_line1 IS 'Registration Center Address Line1 :  for ex. Number, street name, locality, etc.';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.addr_line1 IS 'Registration Center Address Line1 :  for ex. Number, street name, locality, etc.';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.addr_line2 IS 'Registration Center Address Line2 :  for ex. Number, street name, locality, etc.';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.addr_line2 IS 'Registration Center Address Line2 :  for ex. Number, street name, locality, etc.';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.addr_line3 IS 'Registration Center Address Line3 :  for ex.  locality, landmark, area etc.';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.addr_line3 IS 'Registration Center Address Line3 :  for ex.  locality, landmark, area etc.';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.latitude IS 'Latitude: Latitude of the registration center location as per GPS standards / format';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.latitude IS 'Latitude: Latitude of the registration center location as per GPS standards / format';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.longitude IS 'Longitude: Longitude of the registration center location as per GPS standards / format';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.longitude IS 'Longitude: Longitude of the registration center location as per GPS standards / format';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.location_code IS 'Location Code: Location code of the registration center located. Refers to master.location.code';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.location_code IS 'Location Code: Location code of the registration center located. Refers to master.location.code';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.contact_phone IS 'Contact Phone :  Phone number of of the person to be contacted for any additional details.';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.contact_phone IS 'Contact Phone :  Phone number of of the person to be contacted for any additional details.';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.contact_person IS 'Contact Person :  Name of the person to be contacted for any additional details.';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.contact_person IS 'Contact Person :  Name of the person to be contacted for any additional details.';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.number_of_kiosks IS 'Number of Kiosks: Total number of kiosks available at a registration center';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.number_of_kiosks IS 'Number of Kiosks: Total number of kiosks available at a registration center';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.working_hours IS 'Working hours: Working hours of a registration center (8.00 AM - 6.00 PM) ';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.working_hours IS 'Working hours: Working hours of a registration center (8.00 AM - 6.00 PM) ';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.per_kiosk_process_time IS 'Process Time Per Registration: Average process time for registration process per kiosk';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.per_kiosk_process_time IS 'Process Time Per Registration: Average process time for registration process per kiosk';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.center_start_time IS 'Center Start Time : registration center working opening hour / start time.';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.center_start_time IS 'Center Start Time : registration center working opening hour / start time.';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.center_end_time IS 'Center End Time : registration center working closing hour / end time.';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.center_end_time IS 'Center End Time : registration center working closing hour / end time.';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.lunch_start_time IS 'Lunch Start Time: Registration centers lunch break start time';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.lunch_start_time IS 'Lunch Start Time: Registration centers lunch break start time';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.lunch_end_time IS 'Lunch End Time: Registration centers lunch break end time';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.lunch_end_time IS 'Lunch End Time: Registration centers lunch break end time';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.time_zone IS 'Time Zone: Registration centers local timezone GMT, PST, IST';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.time_zone IS 'Time Zone: Registration centers local timezone GMT, PST, IST';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.holiday_loc_code IS 'Holiday Location Code: Location code at which holidays are defined';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.holiday_loc_code IS 'Holiday Location Code: Location code at which holidays are defined';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.zone_code IS 'Zone Code : Unique zone code generated or entered by admin while creating zones, It is referred to master.zone.code. ';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.zone_code IS 'Zone Code : Unique zone code generated or entered by admin while creating zones, It is referred to master.zone.code. ';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.lang_code IS 'Language Code : For multilanguage implementation this attribute Refers master.language.code. The value of some of the attributes in current record is stored in this respective language. ';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.lang_code IS 'Language Code : For multilanguage implementation this attribute Refers master.language.code. The value of some of the attributes in current record is stored in this respective language. ';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.is_active IS 'IS_Active : Flag to mark whether the record is Active or In-active';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.is_active IS 'IS_Active : Flag to mark whether the record is Active or In-active';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.cr_by IS 'Created By : ID or name of the user who create / insert record';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.cr_by IS 'Created By : ID or name of the user who create / insert record';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.cr_dtimes IS 'Created DateTimestamp : Date and Timestamp when the record is created/inserted';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.cr_dtimes IS 'Created DateTimestamp : Date and Timestamp when the record is created/inserted';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.upd_by IS 'Updated By : ID or name of the user who update the record with new values';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.upd_by IS 'Updated By : ID or name of the user who update the record with new values';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.upd_dtimes IS 'Updated DateTimestamp : Date and Timestamp when any of the fields in the record is updated with new values.';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.upd_dtimes IS 'Updated DateTimestamp : Date and Timestamp when any of the fields in the record is updated with new values.';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.is_deleted IS 'IS_Deleted : Flag to mark whether the record is Soft deleted.';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.is_deleted IS 'IS_Deleted : Flag to mark whether the record is Soft deleted.';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.del_dtimes IS 'Deleted DateTimestamp : Date and Timestamp when the record is soft deleted with is_deleted=TRUE';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.del_dtimes IS 'Deleted DateTimestamp : Date and Timestamp when the record is soft deleted with is_deleted=TRUE';
 -- ddl-end --
-COMMENT ON COLUMN archive.registration_center_h.eff_dtimes IS 'Effective Date Timestamp : This to track master record whenever there is an INSERT/UPDATE/DELETE ( soft delete ).  The current record is effective from this date-time. ';
+COMMENT ON COLUMN archive.mosip_master_registration_center_h.eff_dtimes IS 'Effective Date Timestamp : This to track master record whenever there is an INSERT/UPDATE/DELETE ( soft delete ).  The current record is effective from this date-time. ';
 -- ddl-end --
-

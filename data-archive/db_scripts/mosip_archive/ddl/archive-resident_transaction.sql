@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------------------------------
 
 -- This Table is used to save the  transaction related to residents.
-CREATE TABLE archive.resident_transaction(
+CREATE TABLE archive.mosip_resident_transaction(
     event_id VARCHAR(64) NOT NULL,
 	request_trn_id character varying(64) ,
 	request_dtimes timestamp NOT NULL,
@@ -51,38 +51,59 @@ CREATE TABLE archive.resident_transaction(
     CONSTRAINT pk_restrn_event_id PRIMARY KEY (event_id)
 );
 
-COMMENT ON TABLE resident_transaction IS 'This Table is used to save the  transaction related to residents.';
-COMMENT ON COLUMN resident_transaction.event_id IS 'Unique Id of the transaction.';
-COMMENT ON COLUMN archive.resident_transaction.aid IS 'The Application ID';
-COMMENT ON COLUMN archive.resident_transaction.request_dtimes IS 'The time when the request is received by the service';
-COMMENT ON COLUMN archive.resident_transaction.response_dtime IS 'The time when the response is received by the service';
-COMMENT ON COLUMN archive.resident_transaction.request_trn_id IS 'The unique identifier for each transaction';
-COMMENT ON COLUMN archive.resident_transaction.request_type_code IS 'The type of request';
-COMMENT ON COLUMN archive.resident_transaction.request_summary IS 'The summary of the request';
-COMMENT ON COLUMN archive.resident_transaction.status_code IS 'The current status of the request';
-COMMENT ON COLUMN archive.resident_transaction.status_comment IS 'The comment for the status of the request';
-COMMENT ON COLUMN archive.resident_transaction.lang_code IS 'The language code for the request for multi-language support';
-COMMENT ON COLUMN archive.resident_transaction.ref_id_type IS 'The type of reference id';
-COMMENT ON COLUMN archive.resident_transaction.ref_id IS 'The reference id';
-COMMENT ON COLUMN archive.resident_transaction.token_id IS 'The token id';
-COMMENT ON COLUMN archive.resident_transaction.requested_entity_type IS 'The type of the requested entity';
-COMMENT ON COLUMN archive.resident_transaction.requested_entity_id IS 'The id of the requested entity';
-COMMENT ON COLUMN archive.resident_transaction.requested_entity_name IS 'The name of the requested entity';
-COMMENT ON COLUMN archive.resident_transaction.cr_by IS 'The user who created the record';
-COMMENT ON COLUMN archive.resident_transaction.cr_dtimes IS 'The time when the record is created';
-COMMENT ON COLUMN archive.resident_transaction.upd_by IS 'The user who updated the record';
-COMMENT ON COLUMN archive.resident_transaction.upd_dtimes IS 'The time when the record is updated';
-COMMENT ON COLUMN archive.resident_transaction.is_deleted IS 'The flag to identify if the record is deleted or not';
-COMMENT ON COLUMN archive.resident_transaction.del_dtimes IS 'The time when the record is deleted';
-COMMENT ON COLUMN archive.resident_transaction.auth_type_code IS 'The type of the authentication';
-COMMENT ON COLUMN archive.resident_transaction.static_tkn_id IS 'The static token id';
-COMMENT ON COLUMN archive.resident_transaction.request_signature IS 'The signature of the request';
-COMMENT ON COLUMN archive.resident_transaction.response_signature IS 'The signature of the response';
-COMMENT ON COLUMN archive.resident_transaction.olv_partner_id IS 'The partner id';
-COMMENT ON COLUMN archive.resident_transaction.reference_link IS 'The reference link';
-COMMENT ON COLUMN archive.resident_transaction.read_status IS 'The flag to identify if the request is read or not';
-COMMENT ON COLUMN archive.resident_transaction.pinned_status IS 'The flag to identify if the request is pinned or not';
-COMMENT ON COLUMN archive.resident_transaction.purpose IS 'The purpose of the request';
-COMMENT ON COLUMN archive.resident_transaction.credential_request_id IS 'The credential request id';
+COMMENT ON TABLE archive.mosip_resident_transaction IS 'This Table is used to save the  transaction related to residents.';
+COMMENT ON COLUMN archive.mosip_resident_transaction.event_id IS 'Unique Id of the transaction.';
+COMMENT ON COLUMN archive.mosip_resident_transaction.aid IS 'The Application ID';
+COMMENT ON COLUMN archive.mosip_resident_transaction.request_dtimes IS 'The time when the request is received by the service';
+COMMENT ON COLUMN archive.mosip_resident_transaction.response_dtime IS 'The time when the response is received by the service';
+COMMENT ON COLUMN archive.mosip_resident_transaction.request_trn_id IS 'The unique identifier for each transaction';
+COMMENT ON COLUMN archive.mosip_resident_transaction.request_type_code IS 'The type of request';
+COMMENT ON COLUMN archive.mosip_resident_transaction.request_summary IS 'The summary of the request';
+COMMENT ON COLUMN archive.mosip_resident_transaction.status_code IS 'The current status of the request';
+COMMENT ON COLUMN archive.mosip_resident_transaction.status_comment IS 'The comment for the status of the request';
+COMMENT ON COLUMN archive.mosip_resident_transaction.lang_code IS 'The language code for the request for multi-language support';
+COMMENT ON COLUMN archive.mosip_resident_transaction.ref_id_type IS 'The type of reference id';
+COMMENT ON COLUMN archive.mosip_resident_transaction.ref_id IS 'The reference id';
+COMMENT ON COLUMN archive.mosip_resident_transaction.token_id IS 'The token id';
+COMMENT ON COLUMN archive.mosip_resident_transaction.requested_entity_type IS 'The type of the requested entity';
+COMMENT ON COLUMN archive.mosip_resident_transaction.requested_entity_id IS 'The id of the requested entity';
+COMMENT ON COLUMN archive.mosip_resident_transaction.requested_entity_name IS 'The name of the requested entity';
+COMMENT ON COLUMN archive.mosip_resident_transaction.cr_by IS 'The user who created the record';
+COMMENT ON COLUMN archive.mosip_resident_transaction.cr_dtimes IS 'The time when the record is created';
+COMMENT ON COLUMN archive.mosip_resident_transaction.upd_by IS 'The user who updated the record';
+COMMENT ON COLUMN archive.mosip_resident_transaction.upd_dtimes IS 'The time when the record is updated';
+COMMENT ON COLUMN archive.mosip_resident_transaction.is_deleted IS 'The flag to identify if the record is deleted or not';
+COMMENT ON COLUMN archive.mosip_resident_transaction.del_dtimes IS 'The time when the record is deleted';
+COMMENT ON COLUMN archive.mosip_resident_transaction.auth_type_code IS 'The type of the authentication';
+COMMENT ON COLUMN archive.mosip_resident_transaction.static_tkn_id IS 'The static token id';
+COMMENT ON COLUMN archive.mosip_resident_transaction.request_signature IS 'The signature of the request';
+COMMENT ON COLUMN archive.mosip_resident_transaction.response_signature IS 'The signature of the response';
+COMMENT ON COLUMN archive.mosip_resident_transaction.olv_partner_id IS 'The partner id';
+COMMENT ON COLUMN archive.mosip_resident_transaction.reference_link IS 'The reference link';
+COMMENT ON COLUMN archive.mosip_resident_transaction.read_status IS 'The flag to identify if the request is read or not';
+COMMENT ON COLUMN archive.mosip_resident_transaction.pinned_status IS 'The flag to identify if the request is pinned or not';
+COMMENT ON COLUMN archive.mosip_resident_transaction.purpose IS 'The purpose of the request';
+COMMENT ON COLUMN archive.mosip_resident_transaction.credential_request_id IS 'The credential request id';
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Adding index to event_id column
+CREATE INDEX idx_resident_transaction_event_id ON archive.mosip_resident_transaction (event_id);
+
+-- Adding index to token_id column
+CREATE INDEX idx_resident_transaction_token_id ON archive.mosip_resident_transaction (token_id);
+
+-- Adding index to credential_request_id column
+CREATE INDEX idx_resident_transaction_credential_request_id ON archive.mosip_resident_transaction (credential_request_id);
+
+-- Adding index to request_dtimes column
+CREATE INDEX idx_resident_transaction_request_dtimes ON archive.mosip_resident_transaction (request_dtimes);
+
+-- Adding index to request_trn_id column
+CREATE INDEX idx_resident_transaction_request_trn_id ON archive.mosip_resident_transaction (request_trn_id);
+
+-- Adding index to ref_id column
+CREATE INDEX idx_resident_transaction_ref_id ON archive.mosip_resident_transaction (ref_id);
+
+--Adding index to read_status column
+CREATE INDEX idx_resident_transaction_read_status ON archive.mosip_resident_transaction (read_status);
+

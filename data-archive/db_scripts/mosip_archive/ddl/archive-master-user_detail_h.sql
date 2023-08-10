@@ -1,8 +1,8 @@
 
 
--- object: archive.user_detail_h | type: TABLE --
--- DROP TABLE IF EXISTS archive.user_detail_h CASCADE;
-CREATE TABLE archive.user_detail_h(
+-- object: archive.mosip_master_user_detail_h | type: TABLE --
+-- DROP TABLE IF EXISTS archive.mosip_master_user_detail_h CASCADE;
+CREATE TABLE archive.mosip_master_user_detail_h(
 	id character varying(256) NOT NULL,
 	name character varying(64) NOT NULL,
 	status_code character varying(36),
@@ -22,36 +22,35 @@ CREATE TABLE archive.user_detail_h(
 
 );
 -- ddl-end --
-COMMENT ON TABLE archive.user_detail_h IS 'User Detail History : This to track changes to master record whenever there is an INSERT/UPDATE/DELETE ( soft delete ), Effective DateTimestamp is used for identifying latest or point in time information. Refer master.user_detail table description for details.';
+COMMENT ON TABLE archive.mosip_master_user_detail_h IS 'User Detail History : This to track changes to master record whenever there is an INSERT/UPDATE/DELETE ( soft delete ), Effective DateTimestamp is used for identifying latest or point in time information. Refer master.user_detail table description for details.';
 -- ddl-end --
-COMMENT ON COLUMN archive.user_detail_h.id IS 'User ID : Unique ID generated / assigned for a user';
+COMMENT ON COLUMN archive.mosip_master_user_detail_h.id IS 'User ID : Unique ID generated / assigned for a user';
 -- ddl-end --
-COMMENT ON COLUMN archive.user_detail_h.name IS 'Name : User name';
+COMMENT ON COLUMN archive.mosip_master_user_detail_h.name IS 'Name : User name';
 -- ddl-end --
-COMMENT ON COLUMN archive.user_detail_h.status_code IS 'Status Code: User status. Refers to master.status_master.code';
+COMMENT ON COLUMN archive.mosip_master_user_detail_h.status_code IS 'Status Code: User status. Refers to master.status_master.code';
 -- ddl-end --
-COMMENT ON COLUMN archive.user_detail_h.regcntr_id IS 'Registration Center ID : registration center id refers to master.registration_center.id';
+COMMENT ON COLUMN archive.mosip_master_user_detail_h.regcntr_id IS 'Registration Center ID : registration center id refers to master.registration_center.id';
 -- ddl-end --
-COMMENT ON COLUMN archive.user_detail_h.lang_code IS 'Language Code : For multilanguage implementation this attribute Refers master.language.code. The value of some of the attributes in current record is stored in this respective language. ';
+COMMENT ON COLUMN archive.mosip_master_user_detail_h.lang_code IS 'Language Code : For multilanguage implementation this attribute Refers master.language.code. The value of some of the attributes in current record is stored in this respective language. ';
 -- ddl-end --
-COMMENT ON COLUMN archive.user_detail_h.last_login_dtimes IS 'Last Login Datetime: Date and time of the last login by the user';
+COMMENT ON COLUMN archive.mosip_master_user_detail_h.last_login_dtimes IS 'Last Login Datetime: Date and time of the last login by the user';
 -- ddl-end --
-COMMENT ON COLUMN archive.user_detail_h.last_login_method IS 'Last Login Method: Previous login method in which the user logged into the system';
+COMMENT ON COLUMN archive.mosip_master_user_detail_h.last_login_method IS 'Last Login Method: Previous login method in which the user logged into the system';
 -- ddl-end --
-COMMENT ON COLUMN archive.user_detail_h.is_active IS 'IS_Active : Flag to mark whether the record is Active or In-active';
+COMMENT ON COLUMN archive.mosip_master_user_detail_h.is_active IS 'IS_Active : Flag to mark whether the record is Active or In-active';
 -- ddl-end --
-COMMENT ON COLUMN archive.user_detail_h.cr_by IS 'Created By : ID or name of the user who create / insert record';
+COMMENT ON COLUMN archive.mosip_master_user_detail_h.cr_by IS 'Created By : ID or name of the user who create / insert record';
 -- ddl-end --
-COMMENT ON COLUMN archive.user_detail_h.cr_dtimes IS 'Created DateTimestamp : Date and Timestamp when the record is created/inserted';
+COMMENT ON COLUMN archive.mosip_master_user_detail_h.cr_dtimes IS 'Created DateTimestamp : Date and Timestamp when the record is created/inserted';
 -- ddl-end --
-COMMENT ON COLUMN archive.user_detail_h.upd_by IS 'Updated By : ID or name of the user who update the record with new values';
+COMMENT ON COLUMN archive.mosip_master_user_detail_h.upd_by IS 'Updated By : ID or name of the user who update the record with new values';
 -- ddl-end --
-COMMENT ON COLUMN archive.user_detail_h.upd_dtimes IS 'Updated DateTimestamp : Date and Timestamp when any of the fields in the record is updated with new values.';
+COMMENT ON COLUMN archive.mosip_master_user_detail_h.upd_dtimes IS 'Updated DateTimestamp : Date and Timestamp when any of the fields in the record is updated with new values.';
 -- ddl-end --
-COMMENT ON COLUMN archive.user_detail_h.is_deleted IS 'IS_Deleted : Flag to mark whether the record is Soft deleted.';
+COMMENT ON COLUMN archive.mosip_master_user_detail_h.is_deleted IS 'IS_Deleted : Flag to mark whether the record is Soft deleted.';
 -- ddl-end --
-COMMENT ON COLUMN archive.user_detail_h.del_dtimes IS 'Deleted DateTimestamp : Date and Timestamp when the record is soft deleted with is_deleted=TRUE';
+COMMENT ON COLUMN archive.mosip_master_user_detail_h.del_dtimes IS 'Deleted DateTimestamp : Date and Timestamp when the record is soft deleted with is_deleted=TRUE';
 -- ddl-end --
-COMMENT ON COLUMN archive.user_detail_h.eff_dtimes IS 'Effective Date Timestamp : This to track master record whenever there is an INSERT/UPDATE/DELETE ( soft delete ).  The current record is effective from this date-time. ';
+COMMENT ON COLUMN archive.mosip_master_user_detail_h.eff_dtimes IS 'Effective Date Timestamp : This to track master record whenever there is an INSERT/UPDATE/DELETE ( soft delete ).  The current record is effective from this date-time. ';
 -- ddl-end --
-

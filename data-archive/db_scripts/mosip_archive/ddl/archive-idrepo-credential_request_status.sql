@@ -1,6 +1,6 @@
 -- -------------------------------------------------------------------------------------------------
 -- Database Name: mosip_repo
--- Table Name 	: archive.credential_request_status
+-- Table Name 	: archive.mosip_idrepo_credential_request_status
 -- Purpose    	: Credential Request Status: 
 --           
 -- Create By   	: Ram Bhatt
@@ -11,9 +11,9 @@
 -- 
 -- ------------------------------------------------------------------------------------------
 
--- object: archive.credential_request_status | type: TABLE --
--- DROP TABLE IF EXISTS archive.credential_request_status CASCADE;
-CREATE TABLE archive.credential_request_status (
+-- object: archive.mosip_idrepo_credential_request_status | type: TABLE --
+-- DROP TABLE IF EXISTS archive.mosip_idrepo_credential_request_status CASCADE;
+CREATE TABLE archive.mosip_idrepo_credential_request_status (
 	individual_id character varying(500) NOT NULL,
 	individual_id_hash character varying(128) NOT NULL,
 	partner_id character varying(36) NOT NULL,
