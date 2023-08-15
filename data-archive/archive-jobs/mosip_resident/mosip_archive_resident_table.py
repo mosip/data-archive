@@ -6,6 +6,7 @@ import configparser
 import datetime
 from configparser import ConfigParser
 from datetime import datetime
+
 def config(filename='mosip_archive_resident.ini'):
     parser = ConfigParser()
     parser.read(filename)
@@ -18,15 +19,19 @@ def config(filename='mosip_archive_resident.ini'):
         raise Exception('Section [MOSIP-DB-SECTION] not found in the {0} file'.format(filename))
     if parser.has_section('ARCHIVE'):
         dbparam['tables'] = {}
-        for table_section in parser.sections():
-            if table_section.startswith('ARCHIVE_TABLE_'):
-                table_info = dict(parser.items(table_section))
-                source_table = table_info['source_table']
-                archive_table = table_info['archive_table']
-                dbparam['tables'][archive_table] = table_info
+        for table_key in parser.options('ARCHIVE'):
+            table_info = parser.get('ARCHIVE', table_key).split(',')
+            dbparam['tables'][table_info[1]] = {
+                'source_table': table_info[0],
+                'archive_table': table_info[1],
+                'id_column': table_info[2],
+                'date_column': table_info[3] if len(table_info) > 3 else None,
+                'older_than_days': int(table_info[4]) if len(table_info) > 4 else None
+            }
     else:
         raise Exception('Section [ARCHIVE] not found in the {0} file'.format(filename))
     return dbparam
+
 def getValues(row):
     finalValues = ""
     for value in row:
@@ -36,6 +41,7 @@ def getValues(row):
             finalValues += "'" + str(value) + "',"
     finalValues = finalValues[:-1]
     return finalValues
+
 def dataArchive():
     sourceConn = None
     archiveConn = None
@@ -61,7 +67,7 @@ def dataArchive():
         for archive_table_name, table_info in dbparam['tables'].items():
             source_table_name = table_info['source_table']
             id_column = table_info['id_column']
-            if 'date_column' in table_info and 'older_than_days' in table_info:
+            if table_info['date_column'] and table_info['older_than_days']:
                 date_column = table_info['date_column']
                 older_than_days = table_info['older_than_days']
                 select_query = "SELECT * FROM {0}.{1} WHERE {2} < NOW() - INTERVAL '{3} days'".format(sschemaName, source_table_name, date_column, older_than_days)
@@ -100,5 +106,6 @@ def dataArchive():
         if archiveConn is not None:
             archiveConn.close()
             print('Archive database connection closed.')
+
 if __name__ == '__main__':
     dataArchive()
