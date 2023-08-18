@@ -9,6 +9,6 @@
 ### -- Modified Date        Modified By         Comments / Remarks
 ### -- ----------------------------------------------------------------------------------------
 
-python3 mosip_archive_idrepo_table.py &
+python3 mosip_archive_idrepo_table.py
 
 #===============================================================================================

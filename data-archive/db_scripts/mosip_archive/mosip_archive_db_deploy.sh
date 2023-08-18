@@ -52,15 +52,15 @@ echo `date "+%m/%d/%Y %H:%M:%S"` ": Database deployment on $MOSIP_DB_NAME databa
 cd /$BASEPATH/$MOSIP_DB_NAME/
 VALUE=$(PGPASSWORD=$SU_USER_PWD  psql --username=$SU_USER --host=$DB_SERVERIP --port=$DB_PORT --dbname=$DEFAULT_DB_NAME -t -c "select count(1) from pg_roles where rolname IN('sysadmin','appadmin','dbadmin')";exit; >> $LOG 2>&1)
     echo `date "+%m/%d/%Y %H:%M:%S"` ": Checking for existing users.... Count of existing users:"$VALUE | tee -a $LOG 2>&1
-if [ ${VALUE} == 0 ]
+if [ ${VALUE} -eq 0 ]
 then
     echo `date "+%m/%d/%Y %H:%M:%S"` ": Creating database users" | tee -a $LOG 2>&1
     PGPASSWORD=$SU_USER_PWD psql --username=$SU_USER --host=$DB_SERVERIP --port=$DB_PORT --dbname=$DEFAULT_DB_NAME -f $COMMON_ROLE_FILENAME -v sysadminpwd=\'$SYSADMIN_PWD\' -v dbadminpwd=\'$DBADMIN_PWD\' -v appadminpwd=\'$APPADMIN_PWD\' >> $LOG 2>&1
-elif [ ${VALUE} == 1 ]
+elif [ ${VALUE} -eq 1 ]
 then
     echo `date "+%m/%d/%Y %H:%M:%S"` ": Creating database users" | tee -a $LOG 2>&1
 	PGPASSWORD=$SU_USER_PWD psql --username=$SU_USER --host=$DB_SERVERIP --port=$DB_PORT --dbname=$DEFAULT_DB_NAME -f $COMMON_ROLE_FILENAME -v sysadminpwd=\'$SYSADMIN_PWD\' -v dbadminpwd=\'$DBADMIN_PWD\' -v appadminpwd=\'$APPADMIN_PWD\' >> $LOG 2>&1
-elif [ ${VALUE} == 2 ]
+elif [ ${VALUE} -eq 2 ]
 then
     echo `date "+%m/%d/%Y %H:%M:%S"` ": Creating database users" | tee -a $LOG 2>&1
     PGPASSWORD=$SU_USER_PWD psql --username=$SU_USER --host=$DB_SERVERIP --port=$DB_PORT --dbname=$DEFAULT_DB_NAME -f $COMMON_ROLE_FILENAME -v sysadminpwd=\'$SYSADMIN_PWD\' -v dbadminpwd=\'$DBADMIN_PWD\' -v appadminpwd=\'$APPADMIN_PWD\' >> $LOG 2>&1 	
@@ -70,7 +70,7 @@ fi
 
 CONN=$(PGPASSWORD=$SYSADMIN_PWD psql --username=$SYSADMIN_USER --host=$DB_SERVERIP --port=$DB_PORT --dbname=$DEFAULT_DB_NAME -t -c "SELECT count(pg_terminate_backend(pg_stat_activity.pid)) FROM pg_stat_activity WHERE datname = '$MOSIP_DB_NAME' AND pid <> pg_backend_pid()";exit; >> $LOG 2>&1)
 
-if [ ${CONN} == 0 ]
+if [ ${CONN} -eq 0 ]
 then
     echo `date "+%m/%d/%Y %H:%M:%S"` ": No active database connections exist on ${MOSIP_DB_NAME}" | tee -a $LOG 2>&1
 else
@@ -78,7 +78,7 @@ else
 fi
 MASTERCONN=$(PGPASSWORD=$SU_USER_PWD  psql --username=$SU_USER --host=$DB_SERVERIP --port=$DB_PORT --dbname=$DEFAULT_DB_NAME -t -c "select count(1) from pg_roles where rolname IN('archiveuser')";exit; >> $LOG 2>&1)
 
-if [ ${MASTERCONN} == 0 ]
+if [ ${MASTERCONN} -eq 0 ]
 then
     echo `date "+%m/%d/%Y %H:%M:%S"` ": Creating Archive database user" | tee -a $LOG 2>&1
     PGPASSWORD=$SYSADMIN_PWD psql --username=$SYSADMIN_USER --host=$DB_SERVERIP --port=$DB_PORT --dbname=$DEFAULT_DB_NAME -f $APP_ROLE_FILENAME -v dbuserpwd=\'$DBUSER_PWD\' >> $LOG 2>&1
@@ -90,7 +90,7 @@ PGPASSWORD=$SYSADMIN_PWD psql --username=$SYSADMIN_USER --host=$DB_SERVERIP --po
 PGPASSWORD=$SYSADMIN_PWD psql --username=$SYSADMIN_USER --host=$DB_SERVERIP --port=$DB_PORT --dbname=$DEFAULT_DB_NAME -f $DDL_FILENAME >> $LOG 2>&1
 
 
-if [ ${DML_FLAG} == 1 ]
+if [ ${DML_FLAG} -eq 1 ]
 then
     echo `date "+%m/%d/%Y %H:%M:%S"` ": Deploying DML for ${MOSIP_DB_NAME} database" | tee -a $LOG 2>&1
     PGPASSWORD=$SYSADMIN_PWD psql --username=$SYSADMIN_USER --host=$DB_SERVERIP --port=$DB_PORT --dbname=$DEFAULT_DB_NAME -a -b -f $DML_FILENAME >> $LOG 2>&1
