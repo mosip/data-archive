@@ -28,6 +28,9 @@
 \ir ddl/archive-master-registration_center_h.sql
 \ir ddl/archive-master-user_detail_h.sql
 \ir ddl/archive-master-zone_user_h.sql
+\ir ddl/archive-pms-auth_policy_h.sql
+\ir ddl/archive-pms-partner_h.sql
+\ir ddl/archive-pms-secure_biometric_interface_h.sql
 \ir ddl/archive-resident_grievance_ticket.sql
 \ir ddl/archive-resident-otp_transaction.sql
 \ir ddl/archive-resident_session.sql
