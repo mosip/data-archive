@@ -36,8 +36,4 @@
 \ir ddl/archive-resident_session.sql
 \ir ddl/archive-resident_transaction.sql
 \ir ddl/archive-resident_user_actions.sql
-\ir ddl/archive-regprc-abis_request.sql
-\ir ddl/archive-regprc-abis_response.sql
-\ir ddl/archive-regprc-abis_response_det.sql
-\ir ddl/archive-regprc-additional_info_request.sql
-\ir ddl/archive-regprc-reg_verification.sql
+\ir ddl/archive-regprc-registration_transaction.sql
