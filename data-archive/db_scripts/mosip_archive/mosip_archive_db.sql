@@ -1,12 +1,5 @@
-DECLARE
-    db_exists boolean;
-BEGIN
-    SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = 'mosip_archive') INTO db_exists;
-
-    IF db_exists THEN
-        RAISE NOTICE 'Database already exists. Skipping creation.';
-    END IF;
-END $$;
+-- Check if the database 'mosip_archive' exists
+SELECT 1 FROM pg_database WHERE datname = 'mosip_archive';
 
 -- If the database doesn't exist, create it
 CREATE DATABASE mosip_archive
@@ -15,28 +8,23 @@ CREATE DATABASE mosip_archive
     LC_CTYPE = 'en_US.UTF-8'
     TABLESPACE = pg_default
     OWNER = sysadmin
-    TEMPLATE  = template0;
+    TEMPLATE = template0;
 
--- Switch to the created database
-\connect mosip_archive sysadmin;
+-- Connect to the 'mosip_archive' database
+\c mosip_archive sysadmin;
 
--- Check if the archive schema exists
-DO $$ 
-DECLARE
-    schema_exists boolean;
-BEGIN
-    SELECT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'archive') INTO schema_exists;
-
-    IF schema_exists THEN
-        RAISE NOTICE 'Schema already exists. Skipping creation.';
-    END IF;
-END $$;
+-- Check if the 'archive' schema exists
+SELECT 1 FROM  pg_catalog.pg_namespace WHERE nspname = 'archive';
 
 -- If the schema doesn't exist, create it
-CREATE SCHEMA IF NOT EXISTS archive;
+CREATE SCHEMA archive;
 
--- Alter schema owner
+-- Set ownership of the 'archive' schema
 ALTER SCHEMA archive OWNER TO sysadmin;
 
--- Alter database search path
+-- Set the search path
 ALTER DATABASE mosip_archive SET search_path TO archive,pg_catalog,public;
+
+-- Additional SQL statements for schema setup
+
+-- End of the script
