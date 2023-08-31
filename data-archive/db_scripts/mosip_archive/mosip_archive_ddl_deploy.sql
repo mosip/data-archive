@@ -1,5 +1,5 @@
 \c mosip_archive sysadmin
-
+\ir ddl/archive-audit-app_audit_log.sql
 \ir ddl/archive-credential-batch_job_execution.sql
 \ir ddl/archive-credential-batch_job_execution_context.sql
 \ir ddl/archive-credential-batch_job_execution_params.sql
@@ -36,4 +36,8 @@
 \ir ddl/archive-resident_session.sql
 \ir ddl/archive-resident_transaction.sql
 \ir ddl/archive-resident_user_actions.sql
+\ir ddl/archive-regprc-reg_demo_dedupe_list.sql
 \ir ddl/archive-regprc-registration_transaction.sql
+\ir ddl/archive-regprc-abis_response_det.sql
+\ir ddl/archive-regprc-abis_response.sql
+\ir ddl/archive-regprc-abis_request.sql
