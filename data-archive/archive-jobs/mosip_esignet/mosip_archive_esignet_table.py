@@ -4,6 +4,7 @@ import sys
 import psycopg2
 import configparser
 import datetime
+import os
 from configparser import ConfigParser
 from datetime import datetime
 
@@ -17,6 +18,14 @@ def config(filename='mosip_archive_esignet.ini'):
             dbparam[param[0]] = param[1]
     else:
         raise Exception('Section [MOSIP-DB-SECTION] not found in the {0} file'.format(filename))
+    dbparam["source_db_serverip"] = os.environ.get("SOURCE_DB_SERVERIP")
+    dbparam["source_db_port"] = os.environ.get("SOURCE_DB_PORT")
+    dbparam["source_db_uname"] = os.environ.get("SOURCE_DB_UNAME")
+    dbparam["source_db_pass"] = os.environ.get("SOURCE_DB_PASS")
+    dbparam["archive_db_serverip"] = os.environ.get("ARCHIVE_DB_SERVERIP")
+    dbparam["archive_db_port"] = os.environ.get("ARCHIVE_DB_PORT")
+    dbparam["archive_db_uname"] = os.environ.get("ARCHIVE_DB_UNAME")
+    dbparam["archive_db_pass"] = os.environ.get("ARCHIVE_DB_PASS")
     if parser.has_section('ARCHIVE'):
         dbparam['tables'] = {}
         for table_key in parser.options('ARCHIVE'):
