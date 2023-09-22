@@ -1,4 +1,4 @@
-\c mosip_archive sysadmin
+\c mosip_archive
 \ir ddl/archive-audit-app_audit_log.sql
 \ir ddl/archive-credential-batch_job_execution.sql
 \ir ddl/archive-credential-batch_job_execution_context.sql

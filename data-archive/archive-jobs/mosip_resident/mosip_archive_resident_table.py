@@ -4,6 +4,7 @@ import sys
 import psycopg2
 import configparser
 import datetime
+import os
 from configparser import ConfigParser
 from datetime import datetime
 
@@ -17,6 +18,14 @@ def config(filename='mosip_archive_resident.ini'):
             dbparam[param[0]] = param[1]
     else:
         raise Exception('Section [MOSIP-DB-SECTION] not found in the {0} file'.format(filename))
+    dbparam["source_resident_db_serverip"] = os.environ.get("SOURCE_RESIDENT_DB_SERVERIP")
+    dbparam["source_resident_db_port"] = os.environ.get("SOURCE_RESIDENT_DB_PORT")
+    dbparam["source_resident_db_uname"] = os.environ.get("SOURCE_RESIDENT_DB_UNAME")
+    dbparam["source_resident_db_pass"] = os.environ.get("SOURCE_RESIDENT_DB_PASS")
+    dbparam["archive_db_serverip"] = os.environ.get("ARCHIVE_DB_SERVERIP")
+    dbparam["archive_db_port"] = os.environ.get("ARCHIVE_DB_PORT")
+    dbparam["archive_db_uname"] = os.environ.get("ARCHIVE_DB_UNAME")
+    dbparam["archive_db_pass"] = os.environ.get("ARCHIVE_DB_PASS") 
     if parser.has_section('ARCHIVE'):
         dbparam['tables'] = {}
         for table_key in parser.options('ARCHIVE'):
@@ -50,11 +59,11 @@ def dataArchive():
     try:
         dbparam = config()
         print('Connecting to the PostgreSQL database...')
-        sourceConn = psycopg2.connect(user=dbparam["source_db_uname"],
-                                      password=dbparam["source_db_pass"],
-                                      host=dbparam["source_db_serverip"],
-                                      port=dbparam["source_db_port"],
-                                      database=dbparam["source_db_name"])
+        sourceConn = psycopg2.connect(user=dbparam["source_resident_db_uname"],
+                                      password=dbparam["source_resident_db_pass"],
+                                      host=dbparam["source_resident_db_serverip"],
+                                      port=dbparam["source_resident_db_port"],
+                                      database=dbparam["source_resident_db_name"])
         archiveConn = psycopg2.connect(user=dbparam["archive_db_uname"],
                                        password=dbparam["archive_db_pass"],
                                        host=dbparam["archive_db_serverip"],
@@ -62,7 +71,7 @@ def dataArchive():
                                        database=dbparam["archive_db_name"])
         sourceCur = sourceConn.cursor()
         archiveCur = archiveConn.cursor()
-        sschemaName = dbparam["source_schema_name"]
+        sschemaName = dbparam["source_resident_schema_name"]
         aschemaName = dbparam["archive_schema_name"]
         for archive_table_name, table_info in dbparam['tables'].items():
             source_table_name = table_info['source_table']
