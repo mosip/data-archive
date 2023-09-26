@@ -18,16 +18,15 @@ on:
       - 1.*
       - develop
       - release*
+      - MOSIP*
 
 jobs:
   build-dockers:
     strategy:
       matrix:
         include:
-          - SERVICE_LOCATION: 'postgres-init'
-            SERVICE_NAME: 'postgres-init'
-          - SERVICE_LOCATION: 'masterdata'
-            SERVICE_NAME: 'masterdata-loader'
+          - SERVICE_LOCATION: 'data-archive'
+            SERVICE_NAME: 'data-archive'
       fail-fast: false
     name: ${{ matrix.SERVICE_NAME }}
     uses: mosip/kattu/.github/workflows/docker-build.yml@master
