@@ -1,16 +1,13 @@
-### -- ---------------------------------------------------------------------------------------------------------
-### -- Script Name		: IDA Archive Job
-### -- Deploy Module 	: IDA
-### -- Purpose    		: To Archive IDA tables which are marked for archive.       
-### -- Create By   		: Sadanandegowda DM
-### -- Created Date		: Dec-2020
-### -- 
-### -- Modified Date        Modified By         Comments / Remarks
-### -- ----------------------------------------------------------------------------------------
+#!/bin/bash
 
-python mosip_archive_ida_table1.py &
-sleep 5m
+# Export variables as global environment variables
+export SOURCE_IDA_DB_SERVERIP
+export SOURCE_IDA_DB_PORT
+export SOURCE_IDA_DB_UNAME
+export SOURCE_IDA_DB_PASS
+export ARCHIVE_DB_SERVERIP
+export ARCHIVE_DB_PORT
+export ARCHIVE_DB_UNAME
+export ARCHIVE_DB_PASS
 
-python mosip_archive_ida_table2.py &
-
-#===============================================================================================
+python3 mosip_archive_ida_table.py

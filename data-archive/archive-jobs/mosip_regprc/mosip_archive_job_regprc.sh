@@ -1,13 +1,13 @@
-### -- ---------------------------------------------------------------------------------------------------------
-### -- Script Name		: Registration Processor Archive Job
-### -- Deploy Module 	: Pre registration
-### -- Purpose    		: To Archive Registration Processor tables which are marked for archive.       
-### -- Create By   		: Sadanandegowda DM
-### -- Created Date		: Dec-2020
-### -- 
-### -- Modified Date        Modified By         Comments / Remarks
-### -- ----------------------------------------------------------------------------------------
+#!/bin/bash
 
-python mosip_archive_regprc_table1.py &
+# Export variables as global environment variables
+export SOURCE_REGPRC_DB_SERVERIP
+export SOURCE_REGPRC_DB_PORT
+export SOURCE_REGPRC_DB_UNAME
+export SOURCE_REGPRC_DB_PASS
+export ARCHIVE_DB_SERVERIP
+export ARCHIVE_DB_PORT
+export ARCHIVE_DB_UNAME
+export ARCHIVE_DB_PASS
 
-#===============================================================================================
+python3 mosip_archive_regprc_table.py
