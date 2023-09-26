@@ -1,13 +1,13 @@
 FROM postgres
 
-#ARG SOURCE
-#ARG COMMIT_HASH
-#ARG COMMIT_ID
-#ARG BUILD_TIME
-#LABEL source=${SOURCE}
-#LABEL commit_hash=${COMMIT_HASH}
-#LABEL commit_id=${COMMIT_ID}
-#LABEL build_time=${BUILD_TIME}
+ARG SOURCE
+ARG COMMIT_HASH
+ARG COMMIT_ID
+ARG BUILD_TIME
+LABEL source=${SOURCE}
+LABEL commit_hash=${COMMIT_HASH}
+LABEL commit_id=${COMMIT_ID}
+LABEL build_time=${BUILD_TIME}
 
 RUN apt-get update
 RUN apt-get install -y apt-utils python3 python3-pip python3-xlrd python3.11-venv curl git
