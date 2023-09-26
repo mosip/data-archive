@@ -1,4 +1,4 @@
-name: Build postgres-init and masterdata-loader
+name: Build data-archive
 
 on:
   release:
