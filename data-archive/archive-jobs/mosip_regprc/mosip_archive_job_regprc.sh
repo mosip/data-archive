@@ -1,10 +1,13 @@
-#export SOURCE_REGPRC_DB_SERVERIP=172.16.0.162
-#export SOURCE_REGPRC_DB_PORT=30091
-#export SOURCE_REGPRC_DB_UNAME=dbuser
-#export SOURCE_REGPRC_DB_PASS=mosip123
-#export ARCHIVE_DB_SERVERIP=172.16.0.162
-#export ARCHIVE_DB_PORT=30091
-#export ARCHIVE_DB_UNAME=archiveuser
-#export ARCHIVE_DB_PASS=mosip123
+#!/bin/bash
+
+# Export variables as global environment variables
+export SOURCE_REGPRC_DB_SERVERIP
+export SOURCE_REGPRC_DB_PORT
+export SOURCE_REGPRC_DB_UNAME
+export SOURCE_REGPRC_DB_PASS
+export ARCHIVE_DB_SERVERIP
+export ARCHIVE_DB_PORT
+export ARCHIVE_DB_UNAME
+export ARCHIVE_DB_PASS
 
 python3 mosip_archive_regprc_table.py
