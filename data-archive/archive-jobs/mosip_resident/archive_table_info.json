@@ -18,7 +18,7 @@
             "source_table": "resident_session",
             "archive_table": "mosip_resident_session",
             "id_column": "session_id",
-            "date_column": "cr_dtimes",
+            "date_column": "login_dtimes",
             "older_than_days": 30
         },
         {
