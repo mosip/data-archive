@@ -3,44 +3,44 @@
 import sys
 import psycopg2
 import configparser
-import os
 import datetime
-from configparser import ConfigParser
+import os
+import json
 from datetime import datetime
-
-def config(filename='mosip_archive_audit.ini'):
-    parser = ConfigParser()
-    parser.read(filename)
+def config():
     dbparam = {}
-    if parser.has_section('MOSIP-DB-SECTION'):
-        params = parser.items('MOSIP-DB-SECTION')
-        for param in params:
-            dbparam[param[0]] = param[1]
-    else:
-        raise Exception('Section [MOSIP-DB-SECTION] not found in the {0} file'.format(filename))
-    dbparam["source_audit_db_serverip"] = os.environ.get("SOURCE_AUDIT_DB_SERVERIP")
-    dbparam["source_audit_db_port"] = os.environ.get("SOURCE_AUDIT_DB_PORT")
-    dbparam["source_audit_db_uname"] = os.environ.get("SOURCE_AUDIT_DB_UNAME")
-    dbparam["source_audit_db_pass"] = os.environ.get("SOURCE_AUDIT_DB_PASS")
-    dbparam["archive_db_serverip"] = os.environ.get("ARCHIVE_DB_SERVERIP")
-    dbparam["archive_db_port"] = os.environ.get("ARCHIVE_DB_PORT")
-    dbparam["archive_db_uname"] = os.environ.get("ARCHIVE_DB_UNAME")
-    dbparam["archive_db_pass"] = os.environ.get("ARCHIVE_DB_PASS")
-    if parser.has_section('ARCHIVE'):
-        dbparam['tables'] = {}
-        for table_key in parser.options('ARCHIVE'):
-            table_info = parser.get('ARCHIVE', table_key).split(',')
-            dbparam['tables'][table_info[1]] = {
-                'source_table': table_info[0],
-                'archive_table': table_info[1],
-                'id_column': table_info[2],
-                'date_column': table_info[3] if len(table_info) > 3 else None,
-                'older_than_days': int(table_info[4]) if len(table_info) > 4 else None
-            }
-    else:
-        raise Exception('Section [ARCHIVE] not found in the {0} file'.format(filename))
+    try:
+        with open('db.properties') as f:
+            lines = f.readlines()
+            for line in lines:
+                if '=' in line:
+                    key, value = line.strip().split('=', 1)
+                    dbparam[key] = value
+            print("db.properties file found and loaded.")
+    except FileNotFoundError:
+        print("db.properties file not found. Using environment variables.")
+        pass
+    # Environment variables will overwrite file values if present
+    dbparam["SOURCE_AUDIT_DB_SERVERIP"] = os.environ.get("SOURCE_AUDIT_DB_SERVERIP") or dbparam.get("SOURCE_AUDIT_DB_SERVERIP")
+    dbparam["SOURCE_AUDIT_DB_PORT"] = os.environ.get("SOURCE_AUDIT_DB_PORT") or dbparam.get("SOURCE_AUDIT_DB_PORT")
+    dbparam["SOURCE_AUDIT_DB_NAME"] = os.environ.get("SOURCE_AUDIT_DB_NAME") or dbparam.get("SOURCE_AUDIT_DB_NAME")
+    dbparam["SOURCE_AUDIT_SCHEMA_NAME"] = os.environ.get("SOURCE_AUDIT_SCHEMA_NAME") or dbparam.get("SOURCE_AUDIT_SCHEMA_NAME")
+    dbparam["SOURCE_AUDIT_DB_UNAME"] = os.environ.get("SOURCE_AUDIT_DB_UNAME") or dbparam.get("SOURCE_AUDIT_DB_UNAME")
+    dbparam["SOURCE_AUDIT_DB_PASS"] = os.environ.get("SOURCE_AUDIT_DB_PASS") or dbparam.get("SOURCE_AUDIT_DB_PASS")
+    dbparam["ARCHIVE_DB_SERVERIP"] = os.environ.get("ARCHIVE_DB_SERVERIP") or dbparam.get("ARCHIVE_DB_SERVERIP")
+    dbparam["ARCHIVE_DB_PORT"] = os.environ.get("ARCHIVE_DB_PORT") or dbparam.get("ARCHIVE_DB_PORT")
+    dbparam["ARCHIVE_DB_NAME"] = os.environ.get("ARCHIVE_DB_NAME") or dbparam.get("ARCHIVE_DB_NAME")
+    dbparam["ARCHIVE_SCHEMA_NAME"] = os.environ.get("ARCHIVE_SCHEMA_NAME") or dbparam.get("ARCHIVE_SCHEMA_NAME")
+    dbparam["ARCHIVE_DB_UNAME"] = os.environ.get("ARCHIVE_DB_UNAME") or dbparam.get("ARCHIVE_DB_UNAME")
+    dbparam["ARCHIVE_DB_PASS"] = os.environ.get("ARCHIVE_DB_PASS") or dbparam.get("ARCHIVE_DB_PASS")
+    try:
+        with open('archive_table_info.json') as f:
+            archive_table_info = json.load(f)
+            dbparam['tables'] = archive_table_info['tables_info']
+    except FileNotFoundError:
+        print("archive_table_info.json file not found.")
+        sys.exit(1)
     return dbparam
-
 def getValues(row):
     finalValues = ""
     for value in row:
@@ -50,7 +50,6 @@ def getValues(row):
             finalValues += "'" + str(value) + "',"
     finalValues = finalValues[:-1]
     return finalValues
-
 def dataArchive():
     sourceConn = None
     archiveConn = None
@@ -59,24 +58,34 @@ def dataArchive():
     try:
         dbparam = config()
         print('Connecting to the PostgreSQL database...')
-        sourceConn = psycopg2.connect(user=dbparam["source_audit_db_uname"],
-                                      password=dbparam["source_audit_db_pass"],
-                                      host=dbparam["source_audit_db_serverip"],
-                                      port=dbparam["source_audit_db_port"],
-                                      database=dbparam["source_audit_db_name"])
-        archiveConn = psycopg2.connect(user=dbparam["archive_db_uname"],
-                                       password=dbparam["archive_db_pass"],
-                                       host=dbparam["archive_db_serverip"],
-                                       port=dbparam["archive_db_port"],
-                                       database=dbparam["archive_db_name"])
+        print("Source Database Connection Parameters:")
+        print("Username:", dbparam["SOURCE_AUDIT_DB_UNAME"])
+        print("Password:", dbparam["SOURCE_AUDIT_DB_PASS"])
+        print("Host:", dbparam["SOURCE_AUDIT_DB_SERVERIP"])
+        print("Port:", dbparam["SOURCE_AUDIT_DB_PORT"])
+        print("Database Name:", dbparam["SOURCE_AUDIT_DB_NAME"])
+        print("Username:", dbparam["ARCHIVE_DB_UNAME"])
+        print("Password:", dbparam["ARCHIVE_DB_PASS"])
+        sourceConn = psycopg2.connect(user=dbparam["SOURCE_AUDIT_DB_UNAME"],
+                                      password=dbparam["SOURCE_AUDIT_DB_PASS"],
+                                      host=dbparam["SOURCE_AUDIT_DB_SERVERIP"],
+                                      port=dbparam["SOURCE_AUDIT_DB_PORT"],
+                                      database=dbparam["SOURCE_AUDIT_DB_NAME"])
+        archiveConn = psycopg2.connect(user=dbparam["ARCHIVE_DB_UNAME"],
+                                       password=dbparam["ARCHIVE_DB_PASS"],
+                                       host=dbparam["ARCHIVE_DB_SERVERIP"],
+                                       port=dbparam["ARCHIVE_DB_PORT"],
+                                       database=dbparam["ARCHIVE_DB_NAME"])
         sourceCur = sourceConn.cursor()
         archiveCur = archiveConn.cursor()
-        sschemaName = dbparam["source_audit_schema_name"]
-        aschemaName = dbparam["archive_schema_name"]
-        for archive_table_name, table_info in dbparam['tables'].items():
+        sschemaName = dbparam["SOURCE_AUDIT_SCHEMA_NAME"]
+        aschemaName = dbparam["ARCHIVE_SCHEMA_NAME"]
+        # Loop through the list of table_info dictionaries
+        for table_info in dbparam['tables']:
             source_table_name = table_info['source_table']
+            archive_table_name = table_info['archive_table']
             id_column = table_info['id_column']
-            if table_info['date_column'] and table_info['older_than_days']:
+            if 'date_column' in table_info and 'older_than_days' in table_info:
                 date_column = table_info['date_column']
                 older_than_days = table_info['older_than_days']
                 select_query = "SELECT * FROM {0}.{1} WHERE {2} < NOW() - INTERVAL '{3} days'".format(sschemaName, source_table_name, date_column, older_than_days)
@@ -103,7 +112,7 @@ def dataArchive():
                     delete_count = sourceCur.rowcount
                     print(delete_count, ": Record(s) deleted successfully")
     except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
+        print("Error during data archiving:", error)
     finally:
         if sourceCur is not None:
             sourceCur.close()
@@ -115,6 +124,5 @@ def dataArchive():
         if archiveConn is not None:
             archiveConn.close()
             print('Archive database connection closed.')
-
 if __name__ == '__main__':
     dataArchive()
