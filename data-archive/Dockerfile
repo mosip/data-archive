@@ -1,4 +1,4 @@
-FROM postgres:15.2
+FROM postgres:15
 
 ARG SOURCE
 ARG COMMIT_HASH
