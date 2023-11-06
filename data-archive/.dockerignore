@@ -1,4 +1,4 @@
-*.properties
+*all_db_properties.properties
 **/.git
 **/.gitignore
 **/.vscode
