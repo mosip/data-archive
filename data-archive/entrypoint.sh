@@ -1,16 +1,20 @@
 #!/bin/sh
 # entrypoint.sh
+set -e
 
-echo "Executing db.sh"
+echo "Executing db_scripts"
 
-bash db.sh
+echo "Executing dbscript"
 
-echo "executed db.sh succesfully"
+cd db_scripts/mosip_archive
 
-sleep 1m
+# Execute the deployment script without the properties file..,as it was passed by arguments
+bash deploy.sh
 
-echo "Executing archive.sh"
+echo "executed db_scripts succesfully"
 
-bash archive.sh
+echo "Executing archive-jobs"
 
-echo "executed archive.sh successfully"
+python3 mosip_archive_main.py
+
+echo "executed archive-jobs successfully"
