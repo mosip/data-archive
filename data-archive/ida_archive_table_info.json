@@ -12,7 +12,7 @@
             "archive_table": "mosip_ida_otp_transaction",
             "id_column": "id",
             "date_column": "cr_dtimes",
-            "older_than_days": 30            
+            "older_than_days": 30
         }
     ]
 }
