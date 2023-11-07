@@ -2,11 +2,11 @@
 # entrypoint.sh
 set -e
 
-#echo "Executing db.sh"
+echo "Executing db.sh"
 
-#bash db.sh
+bash db.sh
 
-#echo "executed db.sh succesfully"
+echo "executed db.sh succesfully"
 
 
 echo "Executing archive.sh"
