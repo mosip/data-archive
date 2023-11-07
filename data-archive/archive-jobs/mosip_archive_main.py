@@ -62,8 +62,6 @@ def read_tables_info(db_name):
         with open('{}_archive_table_info.json'.format(db_name.lower())) as f:
             tables_info = json.load(f)
             print("{}_archive_table_info.json file found and loaded.".format(db_name.lower()))
-            print("Contents of the JSON file:")
-            print(json.dumps(tables_info, indent=4))
             return tables_info['tables_info']
     except FileNotFoundError:
         print("{}_archive_table_info.json file not found. Using environment variables.".format(db_name.lower()))
