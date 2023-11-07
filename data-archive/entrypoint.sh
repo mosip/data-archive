@@ -8,6 +8,7 @@ bash db.sh
 
 echo "executed db.sh succesfully"
 
+sleep 1m
 
 echo "Executing archive.sh"
 
