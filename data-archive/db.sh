@@ -1,6 +1,5 @@
 #!/bin/bash
 # entrypoint.sh
-set -e
 
 echo "Executing dbscript"
 
