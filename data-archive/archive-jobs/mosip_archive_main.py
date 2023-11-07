@@ -62,6 +62,8 @@ def read_tables_info(db_name):
         with open('{}_archive_table_info.json'.format(db_name.lower())) as f:
             tables_info = json.load(f)
             print("{}_archive_table_info.json file found and loaded.".format(db_name.lower()))
+            print("Contents of the JSON file:")
+            print(json.dumps(tables_info, indent=4))
             return tables_info['tables_info']
     except FileNotFoundError:
         print("{}_archive_table_info.json file not found. Using environment variables.".format(db_name.lower()))
@@ -91,6 +93,12 @@ def dataArchive(db_name, dbparam, tables_info):
             port=dbparam["{}_SOURCE_DB_PORT".format(db_name)],
             database=dbparam["{}_SOURCE_DB_NAME".format(db_name)]
         )
+        print("Archive database connection parameters:")
+        print("User: {}".format(dbparam["ARCHIVE_DB_UNAME"]))
+        print("Password: {}".format(dbparam["ARCHIVE_DB_PASS"]))
+        print("Host: {}".format(dbparam["ARCHIVE_DB_HOST"]))
+        print("Port: {}".format(dbparam["ARCHIVE_DB_PORT"]))
+        print("Database: {}".format(dbparam["ARCHIVE_DB_NAME"]))
         archiveConn = psycopg2.connect(
             user=dbparam["ARCHIVE_DB_UNAME"],
             password=dbparam["ARCHIVE_DB_PASS"],
