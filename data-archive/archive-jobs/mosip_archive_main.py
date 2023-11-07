@@ -80,12 +80,6 @@ def dataArchive(db_name, dbparam, tables_info):
     archiveCur = None
     try:
         print('Connecting to the PostgreSQL database...')
-        print("Source database connection parameters:")
-        print("User: {}".format(dbparam["{}_SOURCE_DB_UNAME".format(db_name)]))
-        print("Password: {}".format(dbparam["{}_SOURCE_DB_PASS".format(db_name)]))
-        print("Host: {}".format(dbparam["{}_SOURCE_DB_HOST".format(db_name)]))
-        print("Port: {}".format(dbparam["{}_SOURCE_DB_PORT".format(db_name)]))
-        print("Database: {}".format(dbparam["{}_SOURCE_DB_NAME".format(db_name)])) 
         sourceConn = psycopg2.connect(
             user=dbparam["{}_SOURCE_DB_UNAME".format(db_name)],
             password=dbparam["{}_SOURCE_DB_PASS".format(db_name)],
@@ -93,12 +87,6 @@ def dataArchive(db_name, dbparam, tables_info):
             port=dbparam["{}_SOURCE_DB_PORT".format(db_name)],
             database=dbparam["{}_SOURCE_DB_NAME".format(db_name)]
         )
-        print("Archive database connection parameters:")
-        print("User: {}".format(dbparam["ARCHIVE_DB_UNAME"]))
-        print("Password: {}".format(dbparam["ARCHIVE_DB_PASS"]))
-        print("Host: {}".format(dbparam["ARCHIVE_DB_HOST"]))
-        print("Port: {}".format(dbparam["ARCHIVE_DB_PORT"]))
-        print("Database: {}".format(dbparam["ARCHIVE_DB_NAME"]))
         archiveConn = psycopg2.connect(
             user=dbparam["ARCHIVE_DB_UNAME"],
             password=dbparam["ARCHIVE_DB_PASS"],
