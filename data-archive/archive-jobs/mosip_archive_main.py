@@ -16,7 +16,8 @@ def config():
         source_param = {db_name: {key.upper(): config[db_name][key] for key in config[db_name]} for db_name in config.sections() if db_name != 'ARCHIVE'}
         
         # Read database names from properties file
-        db_names = config.get('Databases', 'DB_NAMES').split(', ')
+        db_names = config.get('Databases', 'DB_NAMES').split(',')
+        db_names = [name.strip() for name in db_names]  # Strip leading and trailing spaces
         print("all_db_properties.properties file found and loaded.")
     else:
         print("all_db_properties.properties file not found. Using environment variables.")
@@ -30,7 +31,8 @@ def config():
         }
         db_names_env = os.environ.get('DB_NAMES')
         if db_names_env is not None:
-            db_names = db_names_env.split(', ')
+            db_names = db_names_env.split(',')
+            db_names = [name.strip() for name in db_names]  # Strip leading and trailing spaces
         else:
             print("Error: DB_NAMES not found in properties file or environment variables.")
             sys.exit(1)
