@@ -10,17 +10,17 @@ from datetime import datetime
 
 def config():
     config = configparser.ConfigParser()
-    if os.path.exists('all_db_properties.properties'):
-        config.read('all_db_properties.properties')
+    if os.path.exists('db.properties'):
+        config.read('db.properties')
         archive_param = {key.upper(): config['ARCHIVE'][key] for key in config['ARCHIVE']}
         source_param = {db_name: {key.upper(): config[db_name][key] for key in config[db_name]} for db_name in config.sections() if db_name != 'ARCHIVE'}
         
         # Read database names from properties file
         db_names = config.get('Databases', 'DB_NAMES').split(',')
         db_names = [name.strip() for name in db_names]  # Strip leading and trailing spaces
-        print("all_db_properties.properties file found and loaded.")
+        print("db.properties file found and loaded.")
     else:
-        print("all_db_properties.properties file not found. Using environment variables.")
+        print("db.properties file not found. Using environment variables.")
         archive_param = {
             'ARCHIVE_DB_HOST': os.environ.get('ARCHIVE_DB_HOST'),
             'ARCHIVE_DB_PORT': os.environ.get('ARCHIVE_DB_PORT'),
