@@ -1,4 +1,4 @@
-archive-jobs/all_db_properties.properties
+archive-jobs/db.properties
 **/.git
 **/.gitignore
 **/.vscode
