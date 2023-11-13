@@ -1,5 +1,5 @@
 # Use a specific version of the Postgres image
-FROM postgres:15.4
+FROM postgres:16
 
 # Define build arguments and set labels
 ARG SOURCE
