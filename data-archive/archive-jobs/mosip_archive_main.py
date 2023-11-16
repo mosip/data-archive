@@ -54,7 +54,7 @@ def config():
                 source_param[db_name] = {
                     f'{db_name}_SOURCE_DB_HOST': config.get(db_name, f'{db_name}_SOURCE_DB_HOST'),
                     f'{db_name}_SOURCE_DB_PORT': config.get(db_name, f'{db_name}_SOURCE_DB_PORT'),
-                    f'{db_name}__SOURCE_DB_NAME': config.get(db_name, f'{db_name}_SOURCE_DB_NAME'),
+                    f'{db_name}_SOURCE_DB_NAME': config.get(db_name, f'{db_name}_SOURCE_DB_NAME'),
                     f'{db_name}_SOURCE_SCHEMA_NAME': config.get(db_name, f'{db_name}_SOURCE_SCHEMA_NAME'),
                     f'{db_name}_SOURCE_DB_UNAME': config.get(db_name, f'{db_name}_SOURCE_DB_UNAME'),
                     f'{db_name}_SOURCE_DB_PASS': config.get(db_name, f'{db_name}_SOURCE_DB_PASS')
