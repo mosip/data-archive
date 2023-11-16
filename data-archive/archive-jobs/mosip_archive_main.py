@@ -1,26 +1,21 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import sys
+import os
 import psycopg2
 import configparser
-import datetime
-import os
 import json
 from datetime import datetime
 
 def config():
     config = configparser.ConfigParser()
-    if os.path.exists('db.properties'):
-        config.read('db.properties')
-        archive_param = {key.upper(): config['ARCHIVE'][key] for key in config['ARCHIVE']}
-        source_param = {db_name: {key.upper(): config[db_name][key] for key in config[db_name]} for db_name in config.sections() if db_name != 'ARCHIVE'}
-        
-        # Read database names from properties file
-        db_names = config.get('Databases', 'DB_NAMES').split(',')
-        db_names = [name.strip() for name in db_names]  # Strip leading and trailing spaces
-        print("db.properties file found and loaded.")
-    else:
-        print("db.properties file not found. Using environment variables.")
+    archive_param = {}
+    source_param = {}
+    db_names = []
+
+    # Check environment variables first
+    if os.environ.get('ARCHIVE_DB_HOST') is not None:
+        print("Using database connection parameters from environment variables.")
         archive_param = {
             'ARCHIVE_DB_HOST': os.environ.get('ARCHIVE_DB_HOST'),
             'ARCHIVE_DB_PORT': os.environ.get('ARCHIVE_DB_PORT'),
@@ -29,15 +24,14 @@ def config():
             'ARCHIVE_DB_UNAME': os.environ.get('ARCHIVE_DB_UNAME'),
             'ARCHIVE_DB_PASS': os.environ.get('ARCHIVE_DB_PASS')
         }
+
         db_names_env = os.environ.get('DB_NAMES')
         if db_names_env is not None:
-            db_names = db_names_env.split(',')
-            db_names = [name.strip() for name in db_names]  # Strip leading and trailing spaces
+            db_names = [name.strip() for name in db_names_env.split(',')]
         else:
-            print("Error: DB_NAMES not found in properties file or environment variables.")
+            print("Error: DB_NAMES not found in environment variables.")
             sys.exit(1)
 
-        source_param = {}
         for db_name in db_names:
             source_param[db_name] = {
                 f'{db_name}_SOURCE_DB_HOST': os.environ.get(f'{db_name}_SOURCE_DB_HOST'),
@@ -47,6 +41,28 @@ def config():
                 f'{db_name}_SOURCE_DB_UNAME': os.environ.get(f'{db_name}_SOURCE_DB_UNAME'),
                 f'{db_name}_SOURCE_DB_PASS': os.environ.get(f'{db_name}_SOURCE_DB_PASS')
             }
+    else:
+        # If environment variables are not set, try reading from db.properties
+        if os.path.exists('db.properties'):
+            print("Using database connection parameters from db.properties.")
+            config.read('db.properties')
+            archive_param = {key.upper(): config['ARCHIVE'][key] for key in config['ARCHIVE']}
+            db_names = config.get('Databases', 'DB_NAMES').split(',')
+            db_names = [name.strip() for name in db_names]
+
+            for db_name in db_names:
+                source_param[db_name] = {
+                    f'{db_name}_SOURCE_DB_HOST': config.get(db_name, f'{db_name}_SOURCE_DB_HOST'),
+                    f'{db_name}_SOURCE_DB_PORT': config.get(db_name, f'{db_name}_SOURCE_DB_PORT'),
+                    f'{db_name}__SOURCE_DB_NAME': config.get(db_name, f'{db_name}_SOURCE_DB_NAME'),
+                    f'{db_name}_SOURCE_SCHEMA_NAME': config.get(db_name, f'{db_name}_SOURCE_SCHEMA_NAME'),
+                    f'{db_name}_SOURCE_DB_UNAME': config.get(db_name, f'{db_name}_SOURCE_DB_UNAME'),
+                    f'{db_name}_SOURCE_DB_PASS': config.get(db_name, f'{db_name}_SOURCE_DB_PASS')
+                }
+        else:
+            print("Error: db.properties file not found.")
+            sys.exit(1)
+
     return db_names, archive_param, source_param
 
 def getValues(row):
@@ -61,15 +77,15 @@ def getValues(row):
 
 def read_tables_info(db_name):
     try:
-        with open('{}_archive_table_info.json'.format(db_name.lower())) as f:
+        with open(f'{db_name.lower()}_archive_table_info.json') as f:
             tables_info = json.load(f)
-            print("{}_archive_table_info.json file found and loaded.".format(db_name.lower()))
+            print(f"{db_name.lower()}_archive_table_info.json file found and loaded.")
             return tables_info['tables_info']
     except FileNotFoundError:
-        print("{}_archive_table_info.json file not found. Using environment variables.".format(db_name.lower()))
-        tables_info = os.environ.get("{}_archive_table_info".format(db_name.lower()))
+        print(f"{db_name.lower()}_archive_table_info.json file not found. Using environment variables.")
+        tables_info = os.environ.get(f"{db_name.lower()}_archive_table_info")
         if tables_info is None:
-            print("Environment variable {}_archive_table_info not found.".format(db_name.lower()))
+            print(f"Environment variable {db_name.lower()}_archive_table_info not found.")
             sys.exit(1)
         return json.loads(tables_info)['tables_info']
 
@@ -81,11 +97,11 @@ def dataArchive(db_name, dbparam, tables_info):
     try:
         print('Connecting to the PostgreSQL database...')
         sourceConn = psycopg2.connect(
-            user=dbparam["{}_SOURCE_DB_UNAME".format(db_name)],
-            password=dbparam["{}_SOURCE_DB_PASS".format(db_name)],
-            host=dbparam["{}_SOURCE_DB_HOST".format(db_name)],
-            port=dbparam["{}_SOURCE_DB_PORT".format(db_name)],
-            database=dbparam["{}_SOURCE_DB_NAME".format(db_name)]
+            user=dbparam[f"{db_name}_SOURCE_DB_UNAME"],
+            password=dbparam[f"{db_name}_SOURCE_DB_PASS"],
+            host=dbparam[f"{db_name}_SOURCE_DB_HOST"],
+            port=dbparam[f"{db_name}_SOURCE_DB_PORT"],
+            database=dbparam[f"{db_name}_SOURCE_DB_NAME"]
         )
         archiveConn = psycopg2.connect(
             user=dbparam["ARCHIVE_DB_UNAME"],
@@ -96,7 +112,7 @@ def dataArchive(db_name, dbparam, tables_info):
         )
         sourceCur = sourceConn.cursor()
         archiveCur = archiveConn.cursor()
-        sschemaName = dbparam["{}_SOURCE_SCHEMA_NAME".format(db_name)]
+        sschemaName = dbparam[f"{db_name}_SOURCE_SCHEMA_NAME"]
         aschemaName = dbparam["ARCHIVE_SCHEMA_NAME"]
 
         # Loop through the list of table_info dictionaries
@@ -107,29 +123,29 @@ def dataArchive(db_name, dbparam, tables_info):
             if 'date_column' in table_info and 'older_than_days' in table_info:
                 date_column = table_info['date_column']
                 older_than_days = table_info['older_than_days']
-                select_query = "SELECT * FROM {0}.{1} WHERE {2} < NOW() - INTERVAL '{3} days'".format(sschemaName, source_table_name, date_column, older_than_days)
+                select_query = f"SELECT * FROM {sschemaName}.{source_table_name} WHERE {date_column} < NOW() - INTERVAL '{older_than_days} days'"
             else:
-                select_query = "SELECT * FROM {0}.{1}".format(sschemaName, source_table_name)
+                select_query = f"SELECT * FROM {sschemaName}.{source_table_name}"
             sourceCur.execute(select_query)
             rows = sourceCur.fetchall()
             select_count = sourceCur.rowcount
-            print(select_count, ": Record(s) selected for archive from", source_table_name)
+            print(f"{select_count} Record(s) selected for archive from {source_table_name}")
             if select_count > 0:
                 for row in rows:
                     rowValues = getValues(row)
-                    insert_query = "INSERT INTO {0}.{1} VALUES ({2}) ON CONFLICT DO NOTHING".format(aschemaName, archive_table_name, rowValues)
+                    insert_query = f"INSERT INTO {aschemaName}.{archive_table_name} VALUES ({rowValues}) ON CONFLICT DO NOTHING"
                     archiveCur.execute(insert_query)
                     archiveConn.commit()
                     insert_count = archiveCur.rowcount
                     if insert_count == 0:
-                        print("Skipping duplicate record with ID:", row[0])
+                        print(f"Skipping duplicate record with ID: {row[0]}")
                     else:
-                        print(insert_count, ": Record inserted successfully")
-                    delete_query = 'DELETE FROM "{0}"."{1}" WHERE "{2}" = %s'.format(sschemaName, source_table_name, id_column)
+                        print(f"{insert_count} Record inserted successfully")
+                    delete_query = f'DELETE FROM "{sschemaName}"."{source_table_name}" WHERE "{id_column}" = %s'
                     sourceCur.execute(delete_query, (row[0],))
                     sourceConn.commit()
                     delete_count = sourceCur.rowcount
-                    print(delete_count, ": Record(s) deleted successfully")
+                    print(f"{delete_count} Record(s) deleted successfully")
     except (Exception, psycopg2.DatabaseError) as error:
         print("Error during data archiving:", error)
     finally:
