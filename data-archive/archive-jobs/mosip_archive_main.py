@@ -33,14 +33,7 @@ def config():
             sys.exit(1)
 
         for db_name in db_names:
-            source_param[db_name] = {
-                f'{db_name}_SOURCE_DB_HOST': os.environ.get(f'{db_name}_SOURCE_DB_HOST'),
-                f'{db_name}_SOURCE_DB_PORT': os.environ.get(f'{db_name}_SOURCE_DB_PORT'),
-                f'{db_name}_SOURCE_DB_NAME': os.environ.get(f'{db_name}_SOURCE_DB_NAME'),
-                f'{db_name}_SOURCE_SCHEMA_NAME': os.environ.get(f'{db_name}_SOURCE_SCHEMA_NAME'),
-                f'{db_name}_SOURCE_DB_UNAME': os.environ.get(f'{db_name}_SOURCE_DB_UNAME'),
-                f'{db_name}_SOURCE_DB_PASS': os.environ.get(f'{db_name}_SOURCE_DB_PASS')
-            }
+            source_param[db_name] = create_source_param(os.environ, db_name)
     else:
         # If environment variables are not set, try reading from db.properties
         if os.path.exists('db.properties'):
@@ -51,19 +44,22 @@ def config():
             db_names = [name.strip() for name in db_names]
 
             for db_name in db_names:
-                source_param[db_name] = {
-                    f'{db_name}_SOURCE_DB_HOST': config.get(db_name, f'{db_name}_SOURCE_DB_HOST'),
-                    f'{db_name}_SOURCE_DB_PORT': config.get(db_name, f'{db_name}_SOURCE_DB_PORT'),
-                    f'{db_name}_SOURCE_DB_NAME': config.get(db_name, f'{db_name}_SOURCE_DB_NAME'),
-                    f'{db_name}_SOURCE_SCHEMA_NAME': config.get(db_name, f'{db_name}_SOURCE_SCHEMA_NAME'),
-                    f'{db_name}_SOURCE_DB_UNAME': config.get(db_name, f'{db_name}_SOURCE_DB_UNAME'),
-                    f'{db_name}_SOURCE_DB_PASS': config.get(db_name, f'{db_name}_SOURCE_DB_PASS')
-                }
+                source_param[db_name] = create_source_param(config, db_name)
         else:
             print("Error: db.properties file not found.")
             sys.exit(1)
 
     return db_names, archive_param, source_param
+
+def create_source_param(config, db_name):
+    return {
+        f'{db_name}_SOURCE_DB_HOST': config.get(db_name, f'{db_name}_SOURCE_DB_HOST'),
+        f'{db_name}_SOURCE_DB_PORT': config.get(db_name, f'{db_name}_SOURCE_DB_PORT'),
+        f'{db_name}_SOURCE_DB_NAME': config.get(db_name, f'{db_name}_SOURCE_DB_NAME'),
+        f'{db_name}_SOURCE_SCHEMA_NAME': config.get(db_name, f'{db_name}_SOURCE_SCHEMA_NAME'),
+        f'{db_name}_SOURCE_DB_UNAME': config.get(db_name, f'{db_name}_SOURCE_DB_UNAME'),
+        f'{db_name}_SOURCE_DB_PASS': config.get(db_name, f'{db_name}_SOURCE_DB_PASS')
+    }
 
 def getValues(row):
     finalValues = ""
