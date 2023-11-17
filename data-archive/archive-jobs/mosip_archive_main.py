@@ -8,7 +8,6 @@ import json
 from datetime import datetime
 
 def config():
-    config = configparser.ConfigParser()
     archive_param = {}
     source_param = {}
     db_names = []
@@ -33,32 +32,33 @@ def config():
             sys.exit(1)
 
         for db_name in db_names:
-            source_param[db_name] = create_source_param(os.environ, db_name)
+            source_param[db_name] = create_source_param(config_parser=None, env_vars=os.environ, db_name=db_name)
     else:
         # If environment variables are not set, try reading from db.properties
         if os.path.exists('db.properties'):
             print("Using database connection parameters from db.properties.")
-            config.read('db.properties')
-            archive_param = {key.upper(): config['ARCHIVE'][key] for key in config['ARCHIVE']}
-            db_names = config.get('Databases', 'DB_NAMES').split(',')
+            config_parser = configparser.ConfigParser()
+            config_parser.read('db.properties')
+            archive_param = {key.upper(): config_parser['ARCHIVE'][key] for key in config_parser['ARCHIVE']}
+            db_names = config_parser.get('Databases', 'DB_NAMES').split(',')
             db_names = [name.strip() for name in db_names]
 
             for db_name in db_names:
-                source_param[db_name] = create_source_param(config, db_name)
+                source_param[db_name] = create_source_param(config_parser=config_parser, env_vars=os.environ, db_name=db_name)
         else:
             print("Error: db.properties file not found.")
             sys.exit(1)
 
     return db_names, archive_param, source_param
 
-def create_source_param(config, db_name):
+def create_source_param(config_parser, env_vars, db_name):
     return {
-        f'{db_name}_SOURCE_DB_HOST': config.get(db_name, f'{db_name}_SOURCE_DB_HOST'),
-        f'{db_name}_SOURCE_DB_PORT': config.get(db_name, f'{db_name}_SOURCE_DB_PORT'),
-        f'{db_name}_SOURCE_DB_NAME': config.get(db_name, f'{db_name}_SOURCE_DB_NAME'),
-        f'{db_name}_SOURCE_SCHEMA_NAME': config.get(db_name, f'{db_name}_SOURCE_SCHEMA_NAME'),
-        f'{db_name}_SOURCE_DB_UNAME': config.get(db_name, f'{db_name}_SOURCE_DB_UNAME'),
-        f'{db_name}_SOURCE_DB_PASS': config.get(db_name, f'{db_name}_SOURCE_DB_PASS')
+        f'{db_name}_SOURCE_DB_HOST': env_vars.get(f'{db_name}_SOURCE_DB_HOST') or config_parser.get(db_name, f'{db_name}_SOURCE_DB_HOST'),
+        f'{db_name}_SOURCE_DB_PORT': env_vars.get(f'{db_name}_SOURCE_DB_PORT') or config_parser.get(db_name, f'{db_name}_SOURCE_DB_PORT'),
+        f'{db_name}_SOURCE_DB_NAME': env_vars.get(f'{db_name}_SOURCE_DB_NAME') or config_parser.get(db_name, f'{db_name}_SOURCE_DB_NAME'),
+        f'{db_name}_SOURCE_SCHEMA_NAME': env_vars.get(f'{db_name}_SOURCE_SCHEMA_NAME') or config_parser.get(db_name, f'{db_name}_SOURCE_SCHEMA_NAME'),
+        f'{db_name}_SOURCE_DB_UNAME': env_vars.get(f'{db_name}_SOURCE_DB_UNAME') or config_parser.get(db_name, f'{db_name}_SOURCE_DB_UNAME'),
+        f'{db_name}_SOURCE_DB_PASS': env_vars.get(f'{db_name}_SOURCE_DB_PASS') or config_parser.get(db_name, f'{db_name}_SOURCE_DB_PASS')
     }
 
 def getValues(row):
