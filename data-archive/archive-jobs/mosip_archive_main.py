@@ -52,16 +52,17 @@ def config():
     return db_names, archive_param, source_param
 
 def create_source_param(config_parser, env_vars, db_name):
-    return {
-        f'{db_name}_SOURCE_DB_HOST': env_vars.get(f'{db_name}_SOURCE_DB_HOST') or config_parser.get(db_name, f'{db_name}_SOURCE_DB_HOST'),
-        f'{db_name}_SOURCE_DB_PORT': env_vars.get(f'{db_name}_SOURCE_DB_PORT') or config_parser.get(db_name, f'{db_name}_SOURCE_DB_PORT'),
-        f'{db_name}_SOURCE_DB_NAME': env_vars.get(f'{db_name}_SOURCE_DB_NAME') or config_parser.get(db_name, f'{db_name}_SOURCE_DB_NAME'),
-        f'{db_name}_SOURCE_SCHEMA_NAME': env_vars.get(f'{db_name}_SOURCE_SCHEMA_NAME') or config_parser.get(db_name, f'{db_name}_SOURCE_SCHEMA_NAME'),
-        f'{db_name}_SOURCE_DB_UNAME': env_vars.get(f'{db_name}_SOURCE_DB_UNAME') or config_parser.get(db_name, f'{db_name}_SOURCE_DB_UNAME'),
-        f'{db_name}_SOURCE_DB_PASS': env_vars.get(f'{db_name}_SOURCE_DB_PASS') or config_parser.get(db_name, f'{db_name}_SOURCE_DB_PASS')
-    }
+    param_keys = ['SOURCE_DB_HOST', 'SOURCE_DB_PORT', 'SOURCE_DB_NAME', 'SOURCE_SCHEMA_NAME', 'SOURCE_DB_UNAME', 'SOURCE_DB_PASS']
+    source_param = {}
 
-def getValues(row):
+    for key in param_keys:
+        env_key = f'{db_name}_{key}'
+        source_param[env_key] = env_vars.get(env_key) or config_parser.get(db_name, env_key)
+
+    return source_param
+
+
+def get_tablevalues(row):
     finalValues = ""
     for value in row:
         if value is None:
@@ -128,7 +129,7 @@ def dataArchive(db_name, dbparam, tables_info):
             print(f"{select_count} Record(s) selected for archive from {source_table_name}")
             if select_count > 0:
                 for row in rows:
-                    rowValues = getValues(row)
+                    rowValues = get_tablevalues(row)
                     insert_query = f"INSERT INTO {aschemaName}.{archive_table_name} VALUES ({rowValues}) ON CONFLICT DO NOTHING"
                     archiveCur.execute(insert_query)
                     archiveConn.commit()
