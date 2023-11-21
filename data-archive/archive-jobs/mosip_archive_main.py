@@ -126,7 +126,7 @@ def dataArchive(db_name, dbparam, tables_info):
             sourceCur.execute(select_query)
             rows = sourceCur.fetchall()
             select_count = sourceCur.rowcount
-            print(f"{select_count} Record(s) selected for archive from {source_table_name}")
+            print(f"{select_count} Record(s) selected for archive from {source_table_name} from source database {db_name}")
             if select_count > 0:
                 for row in rows:
                     rowValues = get_tablevalues(row)
@@ -135,14 +135,14 @@ def dataArchive(db_name, dbparam, tables_info):
                     archiveConn.commit()
                     insert_count = archiveCur.rowcount
                     if insert_count == 0:
-                        print(f"Skipping duplicate record with ID: {row[0]}")
+                        print(f"Skipping duplicate record with ID: {row[0]} in table {archive_table_name} from source database {db_name}")
                     else:
-                        print(f"{insert_count} Record inserted successfully")
+                        print(f"{insert_count} Record(s) inserted successfully for table {archive_table_name} from source database {db_name}")
                     delete_query = f'DELETE FROM "{sschemaName}"."{source_table_name}" WHERE "{id_column}" = %s'
                     sourceCur.execute(delete_query, (row[0],))
                     sourceConn.commit()
                     delete_count = sourceCur.rowcount
-                    print(f"{delete_count} Record(s) deleted successfully")
+                    print(f"{delete_count} Record(s) deleted successfully for table {source_table_name} from source database {db_name}")
     except (Exception, psycopg2.DatabaseError) as error:
         print("Error during data archiving:", error)
     finally:
