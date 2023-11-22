@@ -52,6 +52,14 @@ def config():
         # Handle case when db.properties file is not found
         print("Error: db.properties file not found. Using environment variables.")
         # Use environment variables
+        archive_param = {
+            'ARCHIVE_DB_HOST': os.environ.get('ARCHIVE_DB_HOST'),
+            'ARCHIVE_DB_PORT': os.environ.get('ARCHIVE_DB_PORT'),
+            'ARCHIVE_DB_NAME': os.environ.get('ARCHIVE_DB_NAME'),
+            'ARCHIVE_SCHEMA_NAME': os.environ.get('ARCHIVE_SCHEMA_NAME'),
+            'ARCHIVE_DB_UNAME': os.environ.get('ARCHIVE_DB_UNAME'),
+            'ARCHIVE_DB_PASS': os.environ.get('ARCHIVE_DB_PASS')
+        }
         check_keys(required_archive_keys, os.environ)
 
         # Extract database names from environment variables
