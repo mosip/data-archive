@@ -156,6 +156,8 @@ def data_archive(db_name, db_param, tables_info):
     """
     try:
         # Connect to source and archive databases using context managers
+        print("db_param:", db_param)
+        logging.info("db_param: %s", db_param)
         with psycopg2.connect(
                 user=db_param[f"{db_name}_SOURCE_DB_UNAME"],
                 password=db_param[f"{db_name}_SOURCE_DB_PASS"],
