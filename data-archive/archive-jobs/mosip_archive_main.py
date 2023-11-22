@@ -65,6 +65,7 @@ def config():
             required_source_keys = ['SOURCE_DB_HOST', 'SOURCE_DB_PORT', 'SOURCE_DB_NAME', 'SOURCE_SCHEMA_NAME', 'SOURCE_DB_UNAME', 'SOURCE_DB_PASS']
             check_keys(required_source_keys, os.environ, prefix=db_name)
             source_param[db_name] = create_source_param(config_parser=None, env_vars=os.environ, db_name=db_name)
+    print(f"archive_param: {archive_param}")
 
     # Return extracted parameters
     return db_names, archive_param, source_param
