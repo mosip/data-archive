@@ -5,7 +5,8 @@
             "archive_table": "mosip_audit_app_audit_log",
             "id_column": "log_id",
             "date_column": "log_dtimes",
-            "older_than_days": 30
+            "retension_days": 30,
+            "need_archival": "true"
         }
     ]
 }

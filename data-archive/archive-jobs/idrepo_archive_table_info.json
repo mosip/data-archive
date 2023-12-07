@@ -5,21 +5,24 @@
             "archive_table": "mosip_idrepo_anonymous_profile",
             "id_column": "id",
             "date_column": "cr_dtimes",
-            "older_than_days": 30
+            "retension_days": 30,
+            "need_archival": "true"
         },
         {
             "source_table": "credential_request_status",
             "archive_table": "mosip_idrepo_credential_request_status",
             "id_column": "individual_id",
             "date_column": "cr_dtimes",
-            "older_than_days": 30            
+            "retension_days": 30,
+            "need_archival": "true"            
         },
         {
             "source_table": "uin_draft",
             "archive_table": "mosip_idrepo_uin_draft",
             "id_column": "id",
             "date_column": "cr_dtimes",
-            "older_than_days": 30            
+            "retension_days": 30,
+            "need_archival": "true"            
         }        
     ]
 }
