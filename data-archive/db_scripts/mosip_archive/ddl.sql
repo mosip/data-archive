@@ -31,6 +31,7 @@
 \ir ddl/archive-pms-auth_policy_h.sql
 \ir ddl/archive-pms-partner_h.sql
 \ir ddl/archive-pms-secure_biometric_interface_h.sql
+\ir ddl/archive-prereg-otp_transaction.sql
 \ir ddl/archive-resident_grievance_ticket.sql
 \ir ddl/archive-resident-otp_transaction.sql
 \ir ddl/archive-resident_session.sql
