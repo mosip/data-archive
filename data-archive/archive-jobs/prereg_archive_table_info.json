@@ -1,12 +1,12 @@
 {
     "tables_info": [
         {
-            "source_table": "consent_history",
-            "archive_table": "mosip_esignet_consent_history",
+            "source_table": "otp_transaction",
+            "archive_table": "mosip_prereg_otp_transaction",
             "id_column": "id",
             "date_column": "cr_dtimes",
             "retension_days": 30,
-            "need_archival": "true"
+            "need_archival": "false"
         }
     ]
 }

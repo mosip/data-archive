@@ -152,37 +152,66 @@ def dataArchive(db_name, dbparam, tables_info):
             source_table_name = table_info['source_table']
             archive_table_name = table_info['archive_table']
             id_column = table_info['id_column']
-            if 'date_column' in table_info and 'older_than_days' in table_info:
-                date_column = table_info['date_column']
-                older_than_days = table_info['older_than_days']
-                # Construct a SELECT query with date-based filtering
-                select_query = f"SELECT * FROM {sschemaName}.{source_table_name} WHERE {date_column} < NOW() - INTERVAL '{older_than_days} days'"
-            else:
-                # Construct a basic SELECT query
-                select_query = f"SELECT * FROM {sschemaName}.{source_table_name}"
-            sourceCur.execute(select_query)
-            rows = sourceCur.fetchall()
-            select_count = sourceCur.rowcount
-            print(f"{select_count} Record(s) selected for archive from {source_table_name} from source database {db_name}")
+            need_archival = table_info.get('need_archival', 'true').lower()  # Default to 'true' if not provided
 
-            if select_count > 0:
-                for row in rows:
-                    rowValues = get_tablevalues(row)
-                    # Construct an INSERT query to archive the selected row
-                    insert_query = f"INSERT INTO {aschemaName}.{archive_table_name} VALUES ({rowValues}) ON CONFLICT DO NOTHING"
-                    archiveCur.execute(insert_query)
-                    archiveConn.commit()
-                    insert_count = archiveCur.rowcount
-                    if insert_count == 0:
-                        print(f"Skipping duplicate record with ID: {row[0]} in table {archive_table_name} from source database {db_name}")
-                    else:
-                        print(f"{insert_count} Record(s) inserted successfully for table {archive_table_name} from source database {db_name}")
-                    # Construct a DELETE query to remove the archived row from the source table
+            if need_archival == 'true':
+                # Archiving is enabled
+                if 'date_column' in table_info and 'retention_days' in table_info:
+                    date_column = table_info['date_column']
+                    retention_days = table_info['retention_days']
+                    # Construct a SELECT query with date-based filtering
+                    select_query = f"SELECT * FROM {sschemaName}.{source_table_name} WHERE {date_column} < NOW() - INTERVAL '{retention_days} days'"
+                else:
+                    # Construct a basic SELECT query
+                    select_query = f"SELECT * FROM {sschemaName}.{source_table_name}"
+                sourceCur.execute(select_query)
+                rows = sourceCur.fetchall()
+                select_count = sourceCur.rowcount
+                print(f"{select_count} Record(s) selected for archive from {source_table_name} from source database {db_name}")
+
+                if select_count > 0:
+                    for row in rows:
+                        rowValues = get_tablevalues(row)
+                        # Construct an INSERT query to archive the selected row
+                        insert_query = f"INSERT INTO {aschemaName}.{archive_table_name} VALUES ({', '.join(['%s']*len(row))}) ON CONFLICT DO NOTHING"
+                        archiveCur.execute(insert_query, row)
+                        archiveConn.commit()
+                        insert_count = archiveCur.rowcount
+                        if insert_count == 0:
+                            print(f"Skipping duplicate record with ID: {row[0]} in table {archive_table_name} from source database {db_name}")
+                        else:
+                            print(f"{insert_count} Record(s) inserted successfully for table {archive_table_name} from source database {db_name}")
+                        # Construct a DELETE query with parameterized values
+                        delete_query = f'DELETE FROM "{sschemaName}"."{source_table_name}" WHERE "{id_column}" = %s'
+                        sourceCur.execute(delete_query, (row[0],))
+                        sourceConn.commit()
+                        delete_count = sourceCur.rowcount
+                        print(f"{delete_count} Record(s) deleted successfully for table {source_table_name} from source database {db_name}")
+            elif need_archival == 'false':
+                # Archiving is disabled, execute a SELECT and DELETE from source
+                if 'date_column' in table_info and 'retention_days' in table_info:
+                    date_column = table_info['date_column']
+                    retention_days = table_info['retention_days']
+                    # Construct a SELECT query with date-based filtering
+                    select_query = f"SELECT * FROM {sschemaName}.{source_table_name} WHERE {date_column} < NOW() - INTERVAL '{retention_days} days'"
+                else:
+                    # Construct a basic SELECT query
+                    select_query = f"SELECT * FROM {sschemaName}.{source_table_name}"
+                sourceCur.execute(select_query)
+                rows = sourceCur.fetchall()
+                select_count = sourceCur.rowcount
+                print(f"{select_count} Record(s) selected for deletion from {source_table_name} from source database {db_name}")
+
+                if select_count > 0:
+                    # Construct a DELETE query to remove the selected rows from the source table
                     delete_query = f'DELETE FROM "{sschemaName}"."{source_table_name}" WHERE "{id_column}" = %s'
-                    sourceCur.execute(delete_query, (row[0],))
-                    sourceConn.commit()
-                    delete_count = sourceCur.rowcount
-                    print(f"{delete_count} Record(s) deleted successfully for table {source_table_name} from source database {db_name}")
+                    for row in rows:
+                        sourceCur.execute(delete_query, (row[0],))
+                        sourceConn.commit()
+                        delete_count = sourceCur.rowcount
+                        print(f"{delete_count} Record(s) deleted successfully for table {source_table_name} from source database {db_name}")
+            else:
+                print(f"Error: Invalid value for 'need_archival' in table {source_table_name}. Use 'true' or 'false'.")
     except (Exception, psycopg2.DatabaseError) as error:
         # Handle exceptions during the data archiving process
         print("Error during data archiving:", error)
@@ -215,3 +244,4 @@ if __name__ == '__main__':
         
         # Archive data for the current source database
         dataArchive(db_name, dbparam, tables_info)
+
