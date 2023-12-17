@@ -1,4 +1,5 @@
 archive-jobs/db.properties
+archive-jobs/audit_archive_table_info.json
 **/.git
 **/.gitignore
 **/.vscode
