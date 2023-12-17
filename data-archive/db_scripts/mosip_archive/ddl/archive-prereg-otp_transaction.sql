@@ -15,7 +15,7 @@ CREATE TABLE archive.mosip_prereg_otp_transaction(
 	upd_dtimes timestamp,
 	is_deleted boolean,
 	del_dtimes timestamp,
-	CONSTRAINT pk_otpt_id PRIMARY KEY (id)
+	CONSTRAINT pk_otptrans_id PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE archive.mosip_prereg_otp_transaction IS 'All OTP related data and validation details are maintained here for Pre Registration module.';
