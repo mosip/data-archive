@@ -1,5 +1,5 @@
 # Use a specific version of the Postgres image
-FROM postgres:16
+FROM postgres:15.4
 
 # Define build arguments and set labels
 ARG SOURCE
@@ -105,7 +105,8 @@ ENV DB_SERVERIP= \
     ARCHIVE_DB_UNAME= \
     ARCHIVE_DB_PASS= \
     ARCHIVE_DB_NAME= \
-    ARCHIVE_SCHEMA_NAME=
+    ARCHIVE_SCHEMA_NAME= \
+    AUDIT_archive_table_info=audit_archive_table_info.json
 
 # Set entrypoint
 ENTRYPOINT ["./entrypoint.sh"]
