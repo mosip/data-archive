@@ -105,8 +105,7 @@ ENV DB_SERVERIP= \
     ARCHIVE_DB_UNAME= \
     ARCHIVE_DB_PASS= \
     ARCHIVE_DB_NAME= \
-    ARCHIVE_SCHEMA_NAME= \
-    AUDIT_archive_table_info=audit_archive_table_info.json
+    ARCHIVE_SCHEMA_NAME= 
 
 # Set entrypoint
 ENTRYPOINT ["./entrypoint.sh"]
