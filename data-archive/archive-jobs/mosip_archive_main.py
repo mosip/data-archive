@@ -103,18 +103,32 @@ def get_tablevalues(row):
     return final_values
 
 def read_tables_info(db_name):
+    file_path = f'{db_name.lower()}_archive_table_info.json'
+    file_in_container_path = f'{db_name.lower()}_archive_table_info'
+    
     try:
-        with open(f'{db_name.lower()}_archive_table_info.json') as f:
+        with open(file_path) as f:
             tables_info = json.load(f)
-            print(f"{db_name.lower()}_archive_table_info.json file found and loaded.")
+            print(f"{file_path} file found and loaded.")
             return tables_info['tables_info']
     except FileNotFoundError:
-        print(f"{db_name.lower()}_archive_table_info.json file not found. Using environment variables.")
-        tables_info = os.environ.get(f"{db_name.lower()}_archive_table_info")
-        if tables_info is None:
-            print(f"Environment variable {db_name.lower()}_archive_table_info not found.")
+        print(f"{file_path} file not found. Trying to retrieve from container volume.")
+
+        # Assuming CONTAINER_VOLUME_PATH is the environment variable containing the path to the container volume
+        container_volume_path = os.environ.get('CONTAINER_VOLUME_PATH')
+
+        if container_volume_path:
+            file_path_in_volume = os.path.join(container_volume_path, file_in_container_path)
+            try:
+                with open(file_path_in_volume) as f:
+                    tables_info = json.load(f)
+                    print(f"Data retrieved from container volume: {file_path_in_volume}")
+                    return tables_info['tables_info']
+            except FileNotFoundError:
+                print(f"{file_path_in_volume} not found in container volume.")
+        else:
+            print("Container volume path not provided. Exiting.")
             sys.exit(1)
-        return json.loads(tables_info)['tables_info']
 
 # Function to archive data from source to archive database
 def data_archive(db_name, db_param, tables_info):
