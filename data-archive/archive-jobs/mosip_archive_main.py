@@ -78,7 +78,7 @@ def config():
 
     # Return extracted parameters
     return db_names, archive_param, source_param
-
+# Function to create source parameters for a specific database
 def create_source_param(config_parser, env_vars, db_name):
     param_keys = ['SOURCE_DB_HOST', 'SOURCE_DB_PORT', 'SOURCE_DB_NAME', 'SOURCE_SCHEMA_NAME', 'SOURCE_DB_UNAME', 'SOURCE_DB_PASS']
     source_param = {}
@@ -86,13 +86,7 @@ def create_source_param(config_parser, env_vars, db_name):
     # Extract source parameters from environment variables or config file
     for key in param_keys:
         env_key = f'{db_name}_{key}'
-        
-        if config_parser:
-            # If config_parser is provided, use it to get the value or fallback to environment variables
-            source_param[env_key] = env_vars.get(env_key) or config_parser.get(db_name, {}).get(env_key)
-        else:
-            # If config_parser is not provided, use only environment variables
-            source_param[env_key] = env_vars.get(env_key)
+        source_param[env_key] = env_vars.get(env_key) or config_parser.get(db_name, env_key)
 
     return source_param
 
