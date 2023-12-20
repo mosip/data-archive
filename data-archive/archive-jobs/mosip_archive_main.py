@@ -10,11 +10,15 @@ from datetime import datetime
 
 # Function to check if required keys are present in a section
 def check_keys(keys, section, prefix=""):
+    missing_keys = []
     for key in keys:
         env_key = f"{prefix}_{key}" if prefix else key
         if key not in section and env_key not in section:
             print(f"Error: {env_key} not found in {section} section.")
-            sys.exit(1)
+            missing_keys.append(key)
+    if missing_keys:
+        print(f"Missing keys: {', '.join(missing_keys)}")
+        sys.exit(1)
 
 # Function to read configuration from file or environment variables
 def config():
