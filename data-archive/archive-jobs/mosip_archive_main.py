@@ -102,28 +102,19 @@ def get_tablevalues(row):
     final_values = final_values[:-1]
     return final_values
 
-# Function to read table information from a JSON file or environment variable
 def read_tables_info(db_name):
     try:
-        # Attempt to read table information from environment variables
-        tables_info_str = os.environ.get(f"{db_name.lower()}_archive_table_info")
-        if tables_info_str is not None:
-            tables_info = json.loads(tables_info_str)['tables_info']
-            print(f"Table information loaded from environment variables for {db_name}.")
-            return tables_info
-    except json.JSONDecodeError:
-        print(f"Error decoding JSON from environment variable {db_name.lower()}_archive_table_info.")
-
-    try:
-        # Attempt to read table information from a JSON file
         with open(f'{db_name.lower()}_archive_table_info.json') as f:
-            tables_info = json.load(f)['tables_info']
+            tables_info = json.load(f)
             print(f"{db_name.lower()}_archive_table_info.json file found and loaded.")
-            return tables_info
+            return tables_info['tables_info']
     except FileNotFoundError:
-        # Handle case when JSON file is not found
-        print(f"{db_name.lower()}_archive_table_info.json file not found.")
-        sys.exit(1)
+        print(f"{db_name.lower()}_archive_table_info.json file not found. Using environment variables.")
+        tables_info = os.environ.get(f"{db_name.lower()}_archive_table_info")
+        if tables_info is None:
+            print(f"Environment variable {db_name.lower()}_archive_table_info not found.")
+            sys.exit(1)
+        return json.loads(tables_info)['tables_info']
 
 # Function to archive data from source to archive database
 def data_archive(db_name, db_param, tables_info):
