@@ -90,7 +90,10 @@ def create_source_param(config_parser, env_vars, db_name):
     # Extract source parameters from environment variables or config file
     for key in param_keys:
         env_key = f'{db_name}_{key}'
-        source_param[env_key] = env_vars.get(env_key) or config_parser.get(db_name, env_key)
+        if config_parser is not None:
+            source_param[env_key] = env_vars.get(env_key) or config_parser.get(db_name, {}).get(env_key)
+        else:
+            source_param[env_key] = env_vars.get(env_key)
 
     return source_param
 
