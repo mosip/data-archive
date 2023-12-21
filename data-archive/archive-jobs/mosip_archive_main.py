@@ -136,7 +136,6 @@ def read_tables_info(db_name):
             print("Container volume path not provided. Exiting.")
             sys.exit(1)
 
-# Function to archive data from source to archive database
 def data_archive(db_name, db_param, tables_info):
     source_conn = None
     archive_conn = None
@@ -168,9 +167,32 @@ def data_archive(db_name, db_param, tables_info):
             source_table_name = table_info['source_table']
             archive_table_name = table_info['archive_table']
             id_column = table_info['id_column']
-            need_archival = table_info.get('need_archival', 'none').lower()
+            operation_type = table_info.get('operation_type', 'none').lower()
 
-            if need_archival == 'archive':
+            if operation_type == 'delete':
+                # Perform delete logic based on retention_days
+                if 'date_column' in table_info and 'retention_days' in table_info:
+                    date_column = table_info['date_column']
+                    retention_days = table_info['retention_days']
+                    select_query = f"SELECT * FROM {sschema_name}.{source_table_name} WHERE {date_column} < NOW() - INTERVAL '{retention_days} days'"
+                else:
+                    select_query = f"SELECT * FROM {sschema_name}.{source_table_name}"
+                
+                source_cur.execute(select_query)
+                rows = source_cur.fetchall()
+                select_count = source_cur.rowcount
+                print(f"{select_count} Record(s) selected for deletion from {source_table_name} from source database {db_name}")
+
+                if select_count > 0:
+                    delete_query = f'DELETE FROM "{sschema_name}"."{source_table_name}" WHERE "{id_column}" = %s'
+                    for row in rows:
+                        source_cur.execute(delete_query, (row[0],))
+                        source_conn.commit()
+                        delete_count = source_cur.rowcount
+                        print(f"{delete_count} Record(s) deleted successfully for table {source_table_name} from source database {db_name}")
+
+            elif operation_type == 'archive_delete':
+                # Perform archive and delete logic
                 if 'date_column' in table_info and 'retention_days' in table_info:
                     date_column = table_info['date_column']
                     retention_days = table_info['retention_days']
@@ -199,7 +221,8 @@ def data_archive(db_name, db_param, tables_info):
                         delete_count = source_cur.rowcount
                         print(f"{delete_count} Record(s) deleted successfully for table {source_table_name} from source database {db_name}")
 
-            elif need_archival == 'delete':
+            elif operation_type == 'archive_nodelete':
+                # Perform archive logic without deleting
                 if 'date_column' in table_info and 'retention_days' in table_info:
                     date_column = table_info['date_column']
                     retention_days = table_info['retention_days']
@@ -209,21 +232,25 @@ def data_archive(db_name, db_param, tables_info):
                 source_cur.execute(select_query)
                 rows = source_cur.fetchall()
                 select_count = source_cur.rowcount
-                print(f"{select_count} Record(s) selected for deletion from {source_table_name} from source database {db_name}")
+                print(f"{select_count} Record(s) selected for archive from {source_table_name} from source database {db_name}")
 
                 if select_count > 0:
-                    delete_query = f'DELETE FROM "{sschema_name}"."{source_table_name}" WHERE "{id_column}" = %s'
                     for row in rows:
-                        source_cur.execute(delete_query, (row[0],))
-                        source_conn.commit()
-                        delete_count = source_cur.rowcount
-                        print(f"{delete_count} Record(s) deleted successfully for table {source_table_name} from source database {db_name}")
+                        row_values = get_tablevalues(row)
+                        insert_query = f"INSERT INTO {aschema_name}.{archive_table_name} VALUES ({', '.join(['%s']*len(row))}) ON CONFLICT DO NOTHING"
+                        archive_cur.execute(insert_query, row)
+                        archive_conn.commit()
+                        insert_count = archive_cur.rowcount
+                        if insert_count == 0:
+                            print(f"Skipping duplicate record with ID: {row[0]} in table {archive_table_name} from source database {db_name}")
+                        else:
+                            print(f"{insert_count} Record(s) inserted successfully for table {archive_table_name} from source database {db_name}")
 
-            elif need_archival == 'none':
+            elif operation_type == 'none':
                 print(f"Skipping archival for table {source_table_name} from source database {db_name}")
 
             else:
-                print(f"Error: Invalid value for 'need_archival' in table {source_table_name}. Use 'archive', 'delete', or 'none'.")
+                print(f"Error: Invalid value for 'operation_type' in table {source_table_name}. Use 'delete', 'archive_delete', 'archive_nodelete', or 'none'.")
 
     except (Exception, psycopg2.DatabaseError) as error:
         print("Error during data archiving:", error)
