@@ -6,7 +6,7 @@
             "id_column": "abis_resp_id",
             "date_column": "cr_dtimes",
             "retension_days": 183,
-            "need_archival": "archive"
+            "operation_type": "archive_delete"
         },
         {
             "source_table": "abis_response",
@@ -14,7 +14,7 @@
             "id_column": "id",
             "date_column": "cr_dtimes",
             "retension_days": 183,
-            "need_archival": "archive"
+            "operation_type": "archive_delete"
         },
         {
             "source_table": "abis_request",
@@ -22,7 +22,7 @@
             "id_column": "id",
             "date_column": "cr_dtimes",
             "retension_days": 183,
-            "need_archival": "archive"
+            "operation_type": "archive_delete"
         },
         {
             "source_table": "reg_demo_dedupe_list",
@@ -30,7 +30,7 @@
             "id_column": "id",
             "date_column": "cr_dtimes",
             "retension_days": 183,
-            "need_archival": "archive"
+            "operation_type": "archive_delete"
         },
         {
             "source_table": "registration_transaction",
@@ -38,7 +38,7 @@
             "id_column": "regtrn_id",
             "date_column": "cr_dtimes",
             "retension_days": 183,
-            "need_archival": "archive"
+            "operation_type": "archive_delete"
         }
     ]
 }

@@ -6,7 +6,7 @@
             "id_column": "id",
             "date_column": "cr_dtimes",
             "retension_days": 183,
-            "need_archival": "archive"
+            "operation_type": "archive_delete"
         },
         {
             "source_table": "secure_biometric_interface_h",
@@ -14,7 +14,7 @@
             "id_column": "id",
             "date_column": "cr_dtimes",
             "retension_days": 183,
-            "need_archival": "archive"
+            "operation_type": "archive_delete"
         },
         {
             "source_table": "partner_h",
@@ -22,7 +22,7 @@
             "id_column": "id",
             "date_column": "cr_dtimes",
             "retension_days": 183,
-            "need_archival": "archive"
+            "operation_type": "archive_delete"
         }
     ]
 }
