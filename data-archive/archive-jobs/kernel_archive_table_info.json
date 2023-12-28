@@ -6,7 +6,7 @@
             "id_column": "id",
             "date_column": "generated_dtimes",
             "retension_days": 7,
-            "need_archival": "false"
+            "operation_type": "delete"
         }
     ]
 }

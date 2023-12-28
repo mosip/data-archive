@@ -6,7 +6,7 @@
             "id_column": "id",
             "date_column": "cr_dtimes",
             "retension_days": 91,
-            "need_archival": "true"
+            "operation_type": "archive_delete"
         },
         {
             "source_table": "device_master_h",
@@ -14,7 +14,7 @@
             "id_column": "id",
             "date_column": "cr_dtimes",
             "retension_days": 365,
-            "need_archival": "true"           
+            "operation_type": "archive_delete"
         },
         {
             "source_table": "machine_master_h",
@@ -22,7 +22,7 @@
             "id_column": "id",
             "date_column": "cr_dtimes",
             "retension_days": 183,
-            "need_archival": "true"           
+            "operation_type": "archive_delete"     
         },
         {
             "source_table": "registration_center_h",
@@ -30,7 +30,7 @@
             "id_column": "id",
             "date_column": "cr_dtimes",
             "retension_days": 365 ,
-            "need_archival": "true"  
+            "operation_type": "archive_delete"  
         },
         {
             "source_table": "user_detail_h",
@@ -38,7 +38,7 @@
             "id_column": "id",
             "date_column": "cr_dtimes",
             "retension_days": 183,
-            "need_archival": "true"
+            "operation_type": "archive_delete"
         },
         {
             "source_table": "zone_user_h",
@@ -46,7 +46,7 @@
             "id_column": "usr_id",
             "date_column": "cr_dtimes",
             "retension_days": 183,
-            "need_archival": "true"
+            "operation_type": "archive_delete"
         }
     ]
 }

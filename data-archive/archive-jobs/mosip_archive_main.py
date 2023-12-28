@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Import necessary libraries and modules
+
 import sys
 import os
 import psycopg2
@@ -10,11 +10,15 @@ from datetime import datetime
 
 # Function to check if required keys are present in a section
 def check_keys(keys, section, prefix=""):
+    missing_keys = []
     for key in keys:
         env_key = f"{prefix}_{key}" if prefix else key
         if key not in section and env_key not in section:
             print(f"Error: {env_key} not found in {section} section.")
-            sys.exit(1)
+            missing_keys.append(key)
+    if missing_keys:
+        print(f"Missing keys: {', '.join(missing_keys)}")
+        sys.exit(1)
 
 # Function to read configuration from file or environment variables
 def config():
@@ -78,7 +82,6 @@ def config():
 
     # Return extracted parameters
     return db_names, archive_param, source_param
-
 # Function to create source parameters for a specific database
 def create_source_param(config_parser, env_vars, db_name):
     param_keys = ['SOURCE_DB_HOST', 'SOURCE_DB_PORT', 'SOURCE_DB_NAME', 'SOURCE_SCHEMA_NAME', 'SOURCE_DB_UNAME', 'SOURCE_DB_PASS']
@@ -87,161 +90,195 @@ def create_source_param(config_parser, env_vars, db_name):
     # Extract source parameters from environment variables or config file
     for key in param_keys:
         env_key = f'{db_name}_{key}'
-        source_param[env_key] = env_vars.get(env_key) or config_parser.get(db_name, env_key)
+        if config_parser is not None:
+            source_param[env_key] = env_vars.get(env_key) or config_parser.get(db_name, {}).get(env_key)
+        else:
+            source_param[env_key] = env_vars.get(env_key)
 
     return source_param
 
 # Function to get formatted values for a row in a table
 def get_tablevalues(row):
-    finalValues = ""
+    final_values = ""
     for value in row:
         if value is None:
-            finalValues += "NULL,"
+            final_values += "NULL,"
         else:
-            finalValues += "'" + str(value) + "',"
-    finalValues = finalValues[:-1]
-    return finalValues
+            final_values += "'" + str(value) + "',"
+    final_values = final_values[:-1]
+    return final_values
 
-# Function to read table information from a JSON file or environment variable
 def read_tables_info(db_name):
+    file_path = f'{db_name.lower()}_archive_table_info.json'
+    file_in_container_path = f'{db_name.lower()}_archive_table_info'
+    
     try:
-        # Attempt to read table information from a JSON file
-        with open(f'{db_name.lower()}_archive_table_info.json') as f:
+        with open(file_path) as f:
             tables_info = json.load(f)
-            print(f"{db_name.lower()}_archive_table_info.json file found and loaded.")
+            print(f"{file_path} file found and loaded.")
             return tables_info['tables_info']
     except FileNotFoundError:
-        # Handle case when JSON file is not found
-        print(f"{db_name.lower()}_archive_table_info.json file not found. Using environment variables.")
-        tables_info = os.environ.get(f"{db_name.lower()}_archive_table_info")
-        if tables_info is None:
-            print(f"Environment variable {db_name.lower()}_archive_table_info not found.")
-            sys.exit(1)
-        return json.loads(tables_info)['tables_info']
+        print(f"{file_path} file not found. Trying to retrieve from container volume.")
 
-# Function to archive data from source to archive database
-def dataArchive(db_name, dbparam, tables_info):
-    sourceConn = None
-    archiveConn = None
-    sourceCur = None
-    archiveCur = None
+        # Assuming CONTAINER_VOLUME_PATH is the environment variable containing the path to the container volume
+        container_volume_path = os.environ.get('CONTAINER_VOLUME_PATH')
+
+        if container_volume_path:
+            file_path_in_volume = os.path.join(container_volume_path, file_in_container_path)
+            try:
+                with open(file_path_in_volume) as f:
+                    tables_info = json.load(f)
+                    print(f"Data retrieved from container volume: {file_path_in_volume}")
+                    return tables_info['tables_info']
+            except FileNotFoundError:
+                print(f"{file_path_in_volume} not found in container volume.")
+        else:
+            print("Container volume path not provided. Exiting.")
+            sys.exit(1)
+
+def data_archive(db_name, db_param, tables_info):
+    source_conn = None
+    archive_conn = None
+    source_cur = None
+    archive_cur = None
     try:
         print(f'Connecting to the PostgreSQL database for {db_name}...')
         # Establish connections to source and archive databases
-        sourceConn = psycopg2.connect(
-            user=dbparam[f"{db_name}_SOURCE_DB_UNAME"],
-            password=dbparam[f"{db_name}_SOURCE_DB_PASS"],
-            host=dbparam[f"{db_name}_SOURCE_DB_HOST"],
-            port=dbparam[f"{db_name}_SOURCE_DB_PORT"],
-            database=dbparam[f"{db_name}_SOURCE_DB_NAME"]
+        source_conn = psycopg2.connect(
+            user=db_param[f"{db_name}_SOURCE_DB_UNAME"],
+            password=db_param[f"{db_name}_SOURCE_DB_PASS"],
+            host=db_param[f"{db_name}_SOURCE_DB_HOST"],
+            port=db_param[f"{db_name}_SOURCE_DB_PORT"],
+            database=db_param[f"{db_name}_SOURCE_DB_NAME"]
         )
-        archiveConn = psycopg2.connect(
-            user=dbparam["ARCHIVE_DB_UNAME"],
-            password=dbparam["ARCHIVE_DB_PASS"],
-            host=dbparam["ARCHIVE_DB_HOST"],
-            port=dbparam["ARCHIVE_DB_PORT"],
-            database=dbparam["ARCHIVE_DB_NAME"]
+        archive_conn = psycopg2.connect(
+            user=db_param["ARCHIVE_DB_UNAME"],
+            password=db_param["ARCHIVE_DB_PASS"],
+            host=db_param["ARCHIVE_DB_HOST"],
+            port=db_param["ARCHIVE_DB_PORT"],
+            database=db_param["ARCHIVE_DB_NAME"]
         )
-        sourceCur = sourceConn.cursor()
-        archiveCur = archiveConn.cursor()
-        sschemaName = dbparam[f"{db_name}_SOURCE_SCHEMA_NAME"]
-        aschemaName = dbparam["ARCHIVE_SCHEMA_NAME"]
+        source_cur = source_conn.cursor()
+        archive_cur = archive_conn.cursor()
+        sschema_name = db_param[f"{db_name}_SOURCE_SCHEMA_NAME"]
+        aschema_name = db_param["ARCHIVE_SCHEMA_NAME"]
 
-        # Loop through the list of table_info dictionaries
         for table_info in tables_info:
             source_table_name = table_info['source_table']
             archive_table_name = table_info['archive_table']
             id_column = table_info['id_column']
-            need_archival = table_info.get('need_archival', 'true').lower()  # Default to 'true' if not provided
+            operation_type = table_info.get('operation_type', 'none').lower()
 
-            if need_archival == 'true':
-                # Archiving is enabled
+            if operation_type == 'delete':
+                # Perform delete logic based on retention_days
                 if 'date_column' in table_info and 'retention_days' in table_info:
                     date_column = table_info['date_column']
                     retention_days = table_info['retention_days']
-                    # Construct a SELECT query with date-based filtering
-                    select_query = f"SELECT * FROM {sschemaName}.{source_table_name} WHERE {date_column} < NOW() - INTERVAL '{retention_days} days'"
+                    select_query = f"SELECT * FROM {sschema_name}.{source_table_name} WHERE {date_column} < NOW() - INTERVAL '{retention_days} days'"
                 else:
-                    # Construct a basic SELECT query
-                    select_query = f"SELECT * FROM {sschemaName}.{source_table_name}"
-                sourceCur.execute(select_query)
-                rows = sourceCur.fetchall()
-                select_count = sourceCur.rowcount
+                    select_query = f"SELECT * FROM {sschema_name}.{source_table_name}"
+                
+                source_cur.execute(select_query)
+                rows = source_cur.fetchall()
+                select_count = source_cur.rowcount
+                print(f"{select_count} Record(s) selected for deletion from {source_table_name} from source database {db_name}")
+
+                if select_count > 0:
+                    delete_query = f'DELETE FROM "{sschema_name}"."{source_table_name}" WHERE "{id_column}" = %s'
+                    for row in rows:
+                        source_cur.execute(delete_query, (row[0],))
+                        source_conn.commit()
+                        delete_count = source_cur.rowcount
+                        print(f"{delete_count} Record(s) deleted successfully for table {source_table_name} from source database {db_name}")
+
+            elif operation_type == 'archive_delete':
+                # Perform archive and delete logic
+                if 'date_column' in table_info and 'retention_days' in table_info:
+                    date_column = table_info['date_column']
+                    retention_days = table_info['retention_days']
+                    select_query = f"SELECT * FROM {sschema_name}.{source_table_name} WHERE {date_column} < NOW() - INTERVAL '{retention_days} days'"
+                else:
+                    select_query = f"SELECT * FROM {sschema_name}.{source_table_name}"
+                source_cur.execute(select_query)
+                rows = source_cur.fetchall()
+                select_count = source_cur.rowcount
                 print(f"{select_count} Record(s) selected for archive from {source_table_name} from source database {db_name}")
 
                 if select_count > 0:
                     for row in rows:
-                        rowValues = get_tablevalues(row)
-                        # Construct an INSERT query to archive the selected row
-                        insert_query = f"INSERT INTO {aschemaName}.{archive_table_name} VALUES ({', '.join(['%s']*len(row))}) ON CONFLICT DO NOTHING"
-                        archiveCur.execute(insert_query, row)
-                        archiveConn.commit()
-                        insert_count = archiveCur.rowcount
+                        row_values = get_tablevalues(row)
+                        insert_query = f"INSERT INTO {aschema_name}.{archive_table_name} VALUES ({', '.join(['%s']*len(row))}) ON CONFLICT DO NOTHING"
+                        archive_cur.execute(insert_query, row)
+                        archive_conn.commit()
+                        insert_count = archive_cur.rowcount
                         if insert_count == 0:
                             print(f"Skipping duplicate record with ID: {row[0]} in table {archive_table_name} from source database {db_name}")
                         else:
                             print(f"{insert_count} Record(s) inserted successfully for table {archive_table_name} from source database {db_name}")
-                        # Construct a DELETE query with parameterized values
-                        delete_query = f'DELETE FROM "{sschemaName}"."{source_table_name}" WHERE "{id_column}" = %s'
-                        sourceCur.execute(delete_query, (row[0],))
-                        sourceConn.commit()
-                        delete_count = sourceCur.rowcount
+                        delete_query = f'DELETE FROM "{sschema_name}"."{source_table_name}" WHERE "{id_column}" = %s'
+                        source_cur.execute(delete_query, (row[0],))
+                        source_conn.commit()
+                        delete_count = source_cur.rowcount
                         print(f"{delete_count} Record(s) deleted successfully for table {source_table_name} from source database {db_name}")
-            elif need_archival == 'false':
-                # Archiving is disabled, execute a SELECT and DELETE from source
+
+            elif operation_type == 'archive_nodelete':
+                # Perform archive logic without deleting
                 if 'date_column' in table_info and 'retention_days' in table_info:
                     date_column = table_info['date_column']
                     retention_days = table_info['retention_days']
-                    # Construct a SELECT query with date-based filtering
-                    select_query = f"SELECT * FROM {sschemaName}.{source_table_name} WHERE {date_column} < NOW() - INTERVAL '{retention_days} days'"
+                    select_query = f"SELECT * FROM {sschema_name}.{source_table_name} WHERE {date_column} < NOW() - INTERVAL '{retention_days} days'"
                 else:
-                    # Construct a basic SELECT query
-                    select_query = f"SELECT * FROM {sschemaName}.{source_table_name}"
-                sourceCur.execute(select_query)
-                rows = sourceCur.fetchall()
-                select_count = sourceCur.rowcount
-                print(f"{select_count} Record(s) selected for deletion from {source_table_name} from source database {db_name}")
+                    select_query = f"SELECT * FROM {sschema_name}.{source_table_name}"
+                source_cur.execute(select_query)
+                rows = source_cur.fetchall()
+                select_count = source_cur.rowcount
+                print(f"{select_count} Record(s) selected for archive from {source_table_name} from source database {db_name}")
 
                 if select_count > 0:
-                    # Construct a DELETE query to remove the selected rows from the source table
-                    delete_query = f'DELETE FROM "{sschemaName}"."{source_table_name}" WHERE "{id_column}" = %s'
                     for row in rows:
-                        sourceCur.execute(delete_query, (row[0],))
-                        sourceConn.commit()
-                        delete_count = sourceCur.rowcount
-                        print(f"{delete_count} Record(s) deleted successfully for table {source_table_name} from source database {db_name}")
+                        row_values = get_tablevalues(row)
+                        insert_query = f"INSERT INTO {aschema_name}.{archive_table_name} VALUES ({', '.join(['%s']*len(row))}) ON CONFLICT DO NOTHING"
+                        archive_cur.execute(insert_query, row)
+                        archive_conn.commit()
+                        insert_count = archive_cur.rowcount
+                        if insert_count == 0:
+                            print(f"Skipping duplicate record with ID: {row[0]} in table {archive_table_name} from source database {db_name}")
+                        else:
+                            print(f"{insert_count} Record(s) inserted successfully for table {archive_table_name} from source database {db_name}")
+
+            elif operation_type == 'none':
+                print(f"Skipping archival for table {source_table_name} from source database {db_name}")
+
             else:
-                print(f"Error: Invalid value for 'need_archival' in table {source_table_name}. Use 'true' or 'false'.")
+                print(f"Error: Invalid value for 'operation_type' in table {source_table_name}. Use 'delete', 'archive_delete', 'archive_nodelete', or 'none'.")
+
     except (Exception, psycopg2.DatabaseError) as error:
-        # Handle exceptions during the data archiving process
         print("Error during data archiving:", error)
     finally:
-        # Close database connections
-        if sourceCur is not None:
-            sourceCur.close()
-        if sourceConn is not None:
-            sourceConn.close()
+        if source_cur is not None:
+            source_cur.close()
+        if source_conn is not None:
+            source_conn.close()
             print(f'Source database connection for {db_name} closed.')
-        if archiveCur is not None:
-            archiveCur.close()
-        if archiveConn is not None:
-            archiveConn.close()
+        if archive_cur is not None:
+            archive_cur.close()
+        if archive_conn is not None:
+            archive_conn.close()
             print('Archive database connection closed.')
 
 # Main execution when the script is run
 if __name__ == '__main__':
     # Get database names, archive parameters, and source parameters
     db_names, archive_param, source_param = config()
-    
+
     # Process each source database
     for db_name in db_names:
         # Combine source and archive parameters
-        dbparam = source_param[db_name]
-        dbparam.update(archive_param)
-        
+        db_param = source_param[db_name]
+        db_param.update(archive_param)
+
         # Read table information
         tables_info = read_tables_info(db_name)
-        
-        # Archive data for the current source database
-        dataArchive(db_name, dbparam, tables_info)
 
+        # Archive data for the current source database
+        data_archive(db_name, db_param, tables_info)

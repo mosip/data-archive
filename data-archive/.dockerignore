@@ -1,4 +1,5 @@
 archive-jobs/db.properties
+archive-jobs/*.json
 **/.git
 **/.gitignore
 **/.vscode

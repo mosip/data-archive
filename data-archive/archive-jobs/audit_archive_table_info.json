@@ -6,7 +6,7 @@
             "id_column": "log_id",
             "date_column": "log_dtimes",
             "retension_days": 30,
-            "need_archival": "true"
+            "operation_type": "archive_delete"
         }
     ]
 }

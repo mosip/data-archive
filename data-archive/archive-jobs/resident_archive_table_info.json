@@ -6,7 +6,7 @@
             "id_column": "id",
             "date_column": "cr_dtimes",
             "retension_days": 30,
-            "need_archival": "false"
+            "operation_type": "delete"
         },
         {
             "source_table": "resident_grievance_ticket",
@@ -14,7 +14,7 @@
             "id_column": "id",
             "date_column": "cr_dtimes",
             "retension_days": 365,
-            "need_archival": "true"
+            "operation_type": "archive_delete"
         },
         {
             "source_table": "resident_session",
@@ -22,7 +22,7 @@
             "id_column": "session_id",
             "date_column": "login_dtimes",
             "retension_days": 30,
-            "need_archival": "true"
+            "operation_type": "archive_delete"
         },
         {
             "source_table": "resident_transaction",
@@ -30,7 +30,7 @@
             "id_column": "id",
             "date_column": "cr_dtimes",
             "retension_days": 365,
-            "need_archival": "true"
+            "operation_type": "archive_delete"
         },
         {
             "source_table": "resident_user_actions",
@@ -38,7 +38,7 @@
             "id_column": "ida_token",
             "date_column": "last_bell_notif_click_dtimes",
             "retension_days": 365,
-            "need_archival": "true"
+            "operation_type": "archive_delete"
         }
     ]
 }
