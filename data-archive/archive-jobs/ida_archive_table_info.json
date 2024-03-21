@@ -1,0 +1,20 @@
+{
+    "tables_info": [
+        {
+            "source_table": "credential_event_store",
+            "archive_table": "mosip_ida_credential_event_store",
+            "id_column": "event_id",
+            "date_column": "cr_dtimes",
+            "retension_days": 30,
+            "operation_type": "archive_delete"
+        },
+        {
+            "source_table": "otp_transaction",
+            "archive_table": "mosip_ida_otp_transaction",
+            "id_column": "id",
+            "date_column": "cr_dtimes",
+            "retension_days": 30,
+            "operation_type": "archive_delete"
+        }
+    ]
+}

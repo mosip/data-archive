@@ -1,0 +1,44 @@
+{
+    "tables_info": [
+        {
+            "source_table": "otp_transaction",
+            "archive_table": "mosip_resident_otp_transaction",
+            "id_column": "id",
+            "date_column": "cr_dtimes",
+            "retension_days": 30,
+            "operation_type": "delete"
+        },
+        {
+            "source_table": "resident_grievance_ticket",
+            "archive_table": "mosip_resident_grievance_ticket",
+            "id_column": "id",
+            "date_column": "cr_dtimes",
+            "retension_days": 365,
+            "operation_type": "archive_delete"
+        },
+        {
+            "source_table": "resident_session",
+            "archive_table": "mosip_resident_session",
+            "id_column": "session_id",
+            "date_column": "login_dtimes",
+            "retension_days": 30,
+            "operation_type": "archive_delete"
+        },
+        {
+            "source_table": "resident_transaction",
+            "archive_table": "mosip_resident_transaction",
+            "id_column": "id",
+            "date_column": "cr_dtimes",
+            "retension_days": 365,
+            "operation_type": "archive_delete"
+        },
+        {
+            "source_table": "resident_user_actions",
+            "archive_table": "mosip_resident_user_actions",
+            "id_column": "ida_token",
+            "date_column": "last_bell_notif_click_dtimes",
+            "retension_days": 365,
+            "operation_type": "archive_delete"
+        }
+    ]
+}
