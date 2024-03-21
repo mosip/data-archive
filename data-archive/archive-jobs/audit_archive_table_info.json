@@ -1,0 +1,12 @@
+{
+    "tables_info": [
+        {
+            "source_table": "app_audit_log",
+            "archive_table": "mosip_audit_app_audit_log",
+            "id_column": "log_id",
+            "date_column": "log_dtimes",
+            "retension_days": 30,
+            "operation_type": "archive_delete"
+        }
+    ]
+}

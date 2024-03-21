@@ -1,0 +1,52 @@
+{
+    "tables_info": [
+        {
+            "source_table": "bulkupload_transaction",
+            "archive_table": "mosip_master_bulkupload_transaction",
+            "id_column": "id",
+            "date_column": "cr_dtimes",
+            "retension_days": 91,
+            "operation_type": "archive_delete"
+        },
+        {
+            "source_table": "device_master_h",
+            "archive_table": "mosip_master_device_master_h",
+            "id_column": "id",
+            "date_column": "cr_dtimes",
+            "retension_days": 365,
+            "operation_type": "archive_delete"
+        },
+        {
+            "source_table": "machine_master_h",
+            "archive_table": "mosip_master_machine_master_h",
+            "id_column": "id",
+            "date_column": "cr_dtimes",
+            "retension_days": 183,
+            "operation_type": "archive_delete"     
+        },
+        {
+            "source_table": "registration_center_h",
+            "archive_table": "mosip_master_registration_center_h",
+            "id_column": "id",
+            "date_column": "cr_dtimes",
+            "retension_days": 365 ,
+            "operation_type": "archive_delete"  
+        },
+        {
+            "source_table": "user_detail_h",
+            "archive_table": "mosip_master_user_detail_h",
+            "id_column": "id",
+            "date_column": "cr_dtimes",
+            "retension_days": 183,
+            "operation_type": "archive_delete"
+        },
+        {
+            "source_table": "zone_user_h",
+            "archive_table": "mosip_master_zone_user_h",
+            "id_column": "usr_id",
+            "date_column": "cr_dtimes",
+            "retension_days": 183,
+            "operation_type": "archive_delete"
+        }
+    ]
+}
