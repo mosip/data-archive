@@ -6,10 +6,10 @@ ARG SOURCE
 ARG COMMIT_HASH
 ARG COMMIT_ID
 ARG BUILD_TIME
-LABEL source=${SOURCE} \
-      commit_hash=${COMMIT_HASH} \
-      commit_id=${COMMIT_ID} \
-      build_time=${BUILD_TIME}
+LABEL source=${SOURCE}
+LABEL commit_hash=${COMMIT_HASH}
+LABEL commit_id=${COMMIT_ID}
+LABEL build_time=${BUILD_TIME}
 
 # Install required packages and clean up to reduce image size
 RUN apt-get update && \
