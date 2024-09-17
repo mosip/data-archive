@@ -177,8 +177,6 @@ def read_tables_info(db_name):
 
 # Function to archive data from source database to archive database
 # Batch-wise data archiving
-# Function to archive data from source database to archive database
-# Batch-wise data archiving
 def data_archive(db_name, db_param, tables_info, batch_size):
     source_conn = None
     archive_conn = None
@@ -212,7 +210,6 @@ def data_archive(db_name, db_param, tables_info, batch_size):
             id_column = table_info['id_column']
             operation_type = table_info.get('operation_type', 'none').lower()
 
-            # Archive without delete operation
             # Archive without delete operation
             if operation_type == 'archive_nodelete':
                 if 'date_column' in table_info and 'retention_days' in table_info:
@@ -256,26 +253,27 @@ def data_archive(db_name, db_param, tables_info, batch_size):
                 print("Committed after processing all batches.")
 
             elif operation_type in ['delete', 'archive_delete']:
-                if 'date_column' in table_info and 'retention_days' in table_info:
-                    date_column = table_info['date_column']
-                    retention_days = table_info['retention_days']
-                    select_query = f"SELECT * FROM {sschema_name}.{source_table_name} WHERE {date_column} < NOW() - INTERVAL '{retention_days} days'"
-                else:
-                    select_query = f"SELECT * FROM {sschema_name}.{source_table_name}"
-
-                print(f"Executing query: {select_query}")
-                
-                # Fetch rows batch-wise
-                batch_number = 1
+                offset = 0
                 while True:
-                    source_cur.execute(select_query)
-                    rows = source_cur.fetchmany(batch_size)  # Fetch the batch
+                    if 'date_column' in table_info and 'retention_days' in table_info:
+                        date_column = table_info['date_column']
+                        retention_days = table_info['retention_days']
+                        select_query = f"SELECT * FROM {sschema_name}.{source_table_name} WHERE {date_column} < NOW() - INTERVAL '{retention_days} days' ORDER BY {id_column} LIMIT %s OFFSET %s"
+                    else:
+                        select_query = f"SELECT * FROM {sschema_name}.{source_table_name} ORDER BY {id_column} LIMIT %s OFFSET %s"
 
-                    if not rows:
+                    print(f"Executing query: {select_query}")
+
+                    # Fetch rows batch-wise
+                    source_cur.execute(select_query, (batch_size, offset))
+                    rows = source_cur.fetchall()
+                    select_count = len(rows)
+
+                    if select_count == 0:
                         print(f"No more records found in {source_table_name}.")
                         break  # Exit the loop when no more rows are found
 
-                    print(f"Processing batch {batch_number} for {source_table_name}...")
+                    print(f"Processing {select_count} records from batch for {source_table_name}...")
 
                     for row in rows:
                         row_values = get_tablevalues(row)
@@ -294,8 +292,8 @@ def data_archive(db_name, db_param, tables_info, batch_size):
                     source_conn.commit()
 
                     # Move to next batch
-                    batch_number += 1
-                    print(f"Moving to next batch {batch_number} for {source_table_name}...")
+                    offset += batch_size
+                    print(f"Moving to next batch for {source_table_name}...")
 
     except Exception as error:
         print(f"Error: {error}")
@@ -309,6 +307,8 @@ def data_archive(db_name, db_param, tables_info, batch_size):
             source_conn.close()
         if archive_conn:
             archive_conn.close()
+
+
 
 # Main function
 def main():
