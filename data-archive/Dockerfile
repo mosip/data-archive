@@ -1,14 +1,15 @@
 # Use a specific version of the Postgres image
 FROM postgres:15.4
 
+# Define build arguments and set labels
 ARG SOURCE
 ARG COMMIT_HASH
 ARG COMMIT_ID
 ARG BUILD_TIME
-LABEL source=${SOURCE}
-LABEL commit_hash=${COMMIT_HASH}
-LABEL commit_id=${COMMIT_ID}
-LABEL build_time=${BUILD_TIME}
+LABEL source=${SOURCE} \
+      commit_hash=${COMMIT_HASH} \
+      commit_id=${COMMIT_ID} \
+      build_time=${BUILD_TIME}
 
 # Install required packages and clean up to reduce image size
 RUN apt-get update && \
@@ -39,6 +40,7 @@ ENV DB_SERVERIP= \
     MOSIP_DB_NAME= \
     DML_FLAG= \
     DB_NAMES= \
+    BATCH_SIZE= \
     AUDIT_SOURCE_DB_HOST= \
     AUDIT_SOURCE_DB_PORT= \
     AUDIT_SOURCE_DB_UNAME= \
