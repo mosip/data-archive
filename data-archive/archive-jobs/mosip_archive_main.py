@@ -225,7 +225,7 @@ def data_archive(db_name, db_param, tables_info, batch_size):
 
             # Prepare the select query based on operation type and retention settings
             if retention_days and date_column:
-                where_clause = f"WHERE {date_column} <= NOW() - INTERVAL '{retention_days} days' AND {id_column} > %s"
+                where_clause = f"WHERE {date_column} < NOW() - INTERVAL '{retention_days} days' AND {id_column} > %s"
             else:
                 where_clause = f"WHERE {id_column} > %s"
 
