@@ -283,7 +283,10 @@ def main():
     all_skipped = 0
 
     with ThreadPoolExecutor() as executor:
-        future_to_db = {executor.submit(data_archive, db_name, source_param, read_tables_info(db_name), batch_size): db_name for db_name in db_names}
+        future_to_db = {
+            executor.submit(data_archive, db_name, archive_param, source_param, read_tables_info(db_name), batch_size): db_name
+            for db_name in db_names
+        }
         for future in as_completed(future_to_db):
             db_name = future_to_db[future]
             try:
