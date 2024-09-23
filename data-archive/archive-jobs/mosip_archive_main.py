@@ -282,21 +282,22 @@ def main():
         db_names, archive_param, source_param, batch_size = config()
         print(f"Starting data archive process with BATCH_SIZE: {batch_size} for databases: {db_names}")
 
-        def archive_db(db_name):
-            tables_info = read_tables_info(db_name)
-            data_archive(db_name, {**archive_param, **source_param[db_name]}, tables_info, batch_size)
-            print(f"Data archive process completed for {db_name}.")
-
-        # Use ThreadPoolExecutor for parallel processing of databases
+        # Use ThreadPoolExecutor to handle parallel processing
         with ThreadPoolExecutor() as executor:
-            futures = {executor.submit(archive_db, db_name): db_name for db_name in db_names}
+            futures = {}
+            for db_name in db_names:
+                tables_info = read_tables_info(db_name)
+                # Submit the archival process to the executor
+                future = executor.submit(data_archive, db_name, {**archive_param, **source_param[db_name]}, tables_info, batch_size)
+                futures[future] = db_name  # Keep track of which future corresponds to which db_name
 
             for future in as_completed(futures):
                 db_name = futures[future]
                 try:
-                    future.result()  # This will raise any exceptions that occurred in the thread
+                    future.result()  # This will raise any exception caught during execution
+                    print(f"Data archive process completed for {db_name}.")
                 except Exception as e:
-                    print(f"Error processing database {db_name}: {e}")
+                    print(f"Error processing {db_name}: {e}")
 
     except Exception as e:
         print(f"Error in main: {e}")
