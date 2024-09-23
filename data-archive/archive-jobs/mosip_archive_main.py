@@ -277,28 +277,30 @@ def data_archive(db_name, db_param, tables_info, batch_size):
 
 # Main function to execute archiving for all databases
 def main():
-    db_names, archive_param, source_param, batch_size = config()
-    all_archived = 0
-    all_deleted = 0
-    all_skipped = 0
+    try:
+        # Get configuration parameters
+        db_names, archive_param, source_param, batch_size = config()
+        print(f"Starting data archive process with BATCH_SIZE: {batch_size} for databases: {db_names}")
 
-    with ThreadPoolExecutor() as executor:
-        future_to_db = {
-            executor.submit(data_archive, db_name, archive_param, source_param, read_tables_info(db_name), batch_size): db_name
-            for db_name in db_names
-        }
-        for future in as_completed(future_to_db):
-            db_name = future_to_db[future]
-            try:
-                archived, deleted, skipped = future.result()
-                all_archived += archived
-                all_deleted += deleted
-                all_skipped += skipped
-                print(f"Finished processing for {db_name}: Archived={archived}, Deleted={deleted}, Skipped={skipped}")
-            except Exception as e:
-                print(f"{db_name} generated an exception: {e}")
+        def archive_db(db_name):
+            tables_info = read_tables_info(db_name)
+            data_archive(db_name, {**archive_param, **source_param[db_name]}, tables_info, batch_size)
+            print(f"Data archive process completed for {db_name}.")
 
-    print(f"\nTotal Archived: {all_archived}, Total Deleted: {all_deleted}, Total Skipped: {all_skipped}")
+        # Use ThreadPoolExecutor for parallel processing of databases
+        with ThreadPoolExecutor() as executor:
+            futures = {executor.submit(archive_db, db_name): db_name for db_name in db_names}
+
+            for future in as_completed(futures):
+                db_name = futures[future]
+                try:
+                    future.result()  # This will raise any exceptions that occurred in the thread
+                except Exception as e:
+                    print(f"Error processing database {db_name}: {e}")
+
+    except Exception as e:
+        print(f"Error in main: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
