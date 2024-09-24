@@ -1,4 +1,3 @@
-
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
@@ -9,10 +8,52 @@ import configparser
 import json
 from datetime import datetime
 from psycopg2 import extras
-from concurrent.futures import ThreadPoolExecutor, as_completed 
+from psycopg2 import pool
 
 # Define batch size
 #BATCH_SIZE = 10
+
+# Create connection pools for source and archive databases
+source_pool = {}
+archive_pool = None
+
+def init_pools(archive_param, source_param):
+    global archive_pool, source_pool
+
+    # Create a connection pool for the archive database
+    archive_pool = psycopg2.pool.SimpleConnectionPool(
+        1, 10,  # Adjust the min and max connections according to your needs
+        user=archive_param["ARCHIVE_DB_UNAME"],
+        password=archive_param["ARCHIVE_DB_PASS"],
+        host=archive_param["ARCHIVE_DB_HOST"],
+        port=archive_param["ARCHIVE_DB_PORT"],
+        database=archive_param["ARCHIVE_DB_NAME"]
+    )
+
+    # Create connection pools for each source database
+    for db_name, param in source_param.items():
+        source_pool[db_name] = psycopg2.pool.SimpleConnectionPool(
+            1, 10,  # Adjust the min and max connections according to your needs
+            user=param[f"{db_name}_SOURCE_DB_UNAME"],
+            password=param[f"{db_name}_SOURCE_DB_PASS"],
+            host=param[f"{db_name}_SOURCE_DB_HOST"],
+            port=param[f"{db_name}_SOURCE_DB_PORT"],
+            database=param[f"{db_name}_SOURCE_DB_NAME"]
+        )
+
+def get_connection(pool, db_name=None):
+    # Get a connection from the specified pool
+    if db_name:
+        return source_pool[db_name].getconn()
+    else:
+        return archive_pool.getconn()
+
+def release_connection(pool, conn, db_name=None):
+    # Return the connection back to the pool
+    if db_name:
+        source_pool[db_name].putconn(conn)
+    else:
+        archive_pool.putconn(conn)
 
 # Function to check if required keys are present in a section
 def check_keys(keys, section, prefix=""):
@@ -28,96 +69,46 @@ def check_keys(keys, section, prefix=""):
 
 # Function to read configuration from file or environment variables
 def config():
-    # Define required keys for archive and database connection
     required_archive_keys = ['ARCHIVE_DB_HOST', 'ARCHIVE_DB_PORT', 'ARCHIVE_DB_NAME', 'ARCHIVE_SCHEMA_NAME', 'ARCHIVE_DB_UNAME', 'ARCHIVE_DB_PASS']
     required_db_names_keys = ['DB_NAMES']
 
     archive_param = {}
     source_param = {}
     db_names = []
-    batch_size = None # Batch size will be read from db.properties or environment variables
+    batch_size = None 
 
-    # Check if db.properties file exists
     if os.path.exists('db.properties'):
         print("Using database connection parameters from db.properties.")
         config_parser = configparser.ConfigParser()
         config_parser.read('db.properties')
 
-        # Check if all required keys are present in ARCHIVE section
         check_keys(required_archive_keys, config_parser['ARCHIVE'])
-
-        # Check if required keys are present in Databases section
         check_keys(required_db_names_keys, config_parser['Databases'])
 
-        # Extract archive parameters and database names from the config file
         archive_param = {key.upper(): config_parser['ARCHIVE'][key] for key in config_parser['ARCHIVE']}
         db_names = config_parser.get('Databases', 'DB_NAMES').split(',')
         db_names = [name.strip() for name in db_names]
 
-        # Extract batch size from the config file if available
         if config_parser.has_option('ARCHIVE', 'BATCH_SIZE'):
             batch_size = int(config_parser['ARCHIVE']['BATCH_SIZE'])
             print(f"Using BATCH_SIZE from db.properties: {batch_size}")
         else:
-            print("Error: BATCH_SIZE not found in db.properties.")
-            # Check environment variable for batch size if not found in config file
             batch_size_env = os.environ.get('BATCH_SIZE')
             if batch_size_env:
                 batch_size = int(batch_size_env)
                 print(f"Using BATCH_SIZE from environment variables: {batch_size}")
             else:
-                print("Error: BATCH_SIZE not found in environment variables.")
-                sys.exit(1)            
+                print("Error: BATCH_SIZE not found.")
+                sys.exit(1)
 
-        # Extract source parameters for each database
         for db_name in db_names:
             required_source_keys = ['SOURCE_DB_HOST', 'SOURCE_DB_PORT', 'SOURCE_DB_NAME', 'SOURCE_SCHEMA_NAME', 'SOURCE_DB_UNAME', 'SOURCE_DB_PASS']
             check_keys(required_source_keys, config_parser[db_name], prefix=db_name)
             source_param[db_name] = create_source_param(config_parser=config_parser, env_vars=os.environ, db_name=db_name)
     else:
-        # Handle case when db.properties file is not found
-        print("Error: db.properties file not found. Using environment variables.")
-        # Use environment variables
-        archive_param = {
-            'ARCHIVE_DB_HOST': os.environ.get('ARCHIVE_DB_HOST'),
-            'ARCHIVE_DB_PORT': os.environ.get('ARCHIVE_DB_PORT'),
-            'ARCHIVE_DB_NAME': os.environ.get('ARCHIVE_DB_NAME'),
-            'ARCHIVE_SCHEMA_NAME': os.environ.get('ARCHIVE_SCHEMA_NAME'),
-            'ARCHIVE_DB_UNAME': os.environ.get('ARCHIVE_DB_UNAME'),
-            'ARCHIVE_DB_PASS': os.environ.get('ARCHIVE_DB_PASS')
-        }
-        check_keys(required_archive_keys, archive_param)
+        print("Error: db.properties file not found.")
+        sys.exit(1)
 
-        # Extract batch size from environment variables if available
-        # batch_size_env = os.environ.get('BATCH_SIZE')
-        # if batch_size_env:
-        #     batch_size = int(batch_size_env)
-        #     print(f"Using BATCH_SIZE from environment variables: {batch_size}")
-
-        # Check environment variable for batch size if not found in config file
-        batch_size_env = os.environ.get('BATCH_SIZE')
-        if batch_size_env:
-            batch_size = int(batch_size_env)
-            print(f"Using BATCH_SIZE from environment variables: {batch_size}")
-        else:
-            print("Error: BATCH_SIZE not found in environment variables.")
-            sys.exit(1)
-
-        # Extract database names from environment variables
-        db_names_env = os.environ.get('DB_NAMES')
-        if db_names_env is not None:
-            db_names = [name.strip() for name in db_names_env.split(',')]
-        else:
-            print("Error: DB_NAMES not found in environment variables.")
-            sys.exit(1)
-
-        # Extract source parameters for each database from environment variables
-        for db_name in db_names:
-            required_source_keys = ['SOURCE_DB_HOST', 'SOURCE_DB_PORT', 'SOURCE_DB_NAME', 'SOURCE_SCHEMA_NAME', 'SOURCE_DB_UNAME', 'SOURCE_DB_PASS']
-            check_keys(required_source_keys, os.environ, prefix=db_name)
-            source_param[db_name] = create_source_param(config_parser=None, env_vars=os.environ, db_name=db_name)
-
-    # Return extracted parameters and dynamic batch size
     return db_names, archive_param, source_param, batch_size
 
 # Function to create source parameters for a specific database
@@ -177,7 +168,7 @@ def read_tables_info(db_name):
             print("Container volume path not provided. Exiting.")
             sys.exit(1)
 
-# Function to archive data from source database to archive databas
+# Function to archive data from source database to archive database
 def data_archive(db_name, db_param, tables_info, batch_size):
     source_conn = None
     archive_conn = None
@@ -191,23 +182,9 @@ def data_archive(db_name, db_param, tables_info, batch_size):
     try:
         print(f'Connecting to the PostgreSQL source and archive databases for {db_name}...')
 
-        # Establish connection to the source database
-        source_conn = psycopg2.connect(
-            user=db_param[f"{db_name}_SOURCE_DB_UNAME"],
-            password=db_param[f"{db_name}_SOURCE_DB_PASS"],
-            host=db_param[f"{db_name}_SOURCE_DB_HOST"],
-            port=db_param[f"{db_name}_SOURCE_DB_PORT"],
-            database=db_param[f"{db_name}_SOURCE_DB_NAME"]
-        )
-
-        # Establish connection to the archive database
-        archive_conn = psycopg2.connect(
-            user=db_param["ARCHIVE_DB_UNAME"],
-            password=db_param["ARCHIVE_DB_PASS"],
-            host=db_param["ARCHIVE_DB_HOST"],
-            port=db_param["ARCHIVE_DB_PORT"],
-            database=db_param["ARCHIVE_DB_NAME"]
-        )
+        # Get connections from the connection pools
+        source_conn = get_connection(source_pool, db_name)
+        archive_conn = get_connection(archive_pool)
 
         source_cur = source_conn.cursor()
         archive_cur = archive_conn.cursor()
@@ -222,33 +199,24 @@ def data_archive(db_name, db_param, tables_info, batch_size):
             retention_days = table_info.get('retention_days', None)
             operation_type = table_info.get('operation_type', 'none').lower()
 
-            last_processed_id = None  # Initialize last processed ID
+            last_processed_id = None  
 
-            # Prepare the select query based on operation type and retention settings
             if retention_days and date_column:
                 where_clause = f"WHERE {date_column} < NOW() - INTERVAL '{retention_days} days' AND {id_column} > %s"
             else:
                 where_clause = f"WHERE {id_column} > %s"
 
             while True:
-                # SELECT query for operation_type delete
                 if operation_type == 'delete':
                     select_query = f"SELECT * FROM {sschema_name}.{source_table_name} {where_clause} ORDER BY {id_column} LIMIT %s"
-
-                # SELECT query for operation_type archive_delete
                 elif operation_type == 'archive_delete':
                     select_query = f"SELECT * FROM {sschema_name}.{source_table_name} {where_clause} ORDER BY {id_column} LIMIT %s"
-
-                # SELECT query for operation_type archive_nodelete
                 elif operation_type == 'archive_nodelete':
                     select_query = f"SELECT * FROM {sschema_name}.{source_table_name} {where_clause} ORDER BY {id_column} LIMIT %s"
-
-                # Skip the processing if operation_type is 'none'
                 elif operation_type == 'none':
                     print(f"No operation specified for {source_table_name}, skipping.")
                     break
 
-                # Execute the select query
                 source_cur.execute(select_query, (last_processed_id if last_processed_id else '0', batch_size))
                 rows = source_cur.fetchall()
 
@@ -257,101 +225,58 @@ def data_archive(db_name, db_param, tables_info, batch_size):
                     break
 
                 for row in rows:
-                    row_id = row[0]
+                    row_id = row[0] 
                     values = get_tablevalues(row)
 
-                    # Check for existence before inserting for archive_delete and archive_nodelete
                     if operation_type in ['archive_delete', 'archive_nodelete']:
-                        check_query = f"SELECT 1 FROM {aschema_name}.{archive_table_name} WHERE {id_column} = %s"
-                        archive_cur.execute(check_query, (row_id,))
-                        exists = archive_cur.fetchone()
+                        insert_query = f"INSERT INTO {aschema_name}.{archive_table_name} VALUES ({values}) ON CONFLICT DO NOTHING"
+                        archive_cur.execute(insert_query)
 
-                        if exists:
-                            total_skipped += 1
-                            print(f"Record {row_id} already exists in {archive_table_name}, skipping.")
-                        else:
-                            try:
-                                # Insert the record into the archive database
-                                insert_query = f"INSERT INTO {aschema_name}.{archive_table_name} VALUES ({values})"
-                                archive_cur.execute(insert_query)
-                                total_archived += 1
-                                print(f"Record {row_id} inserted into {archive_table_name}.")
-                            except psycopg2.Error as e:
-                                print(f"Error inserting record {row_id} into {archive_table_name}: {e}")
-                                archive_conn.rollback()
-                                continue
-
-                    # Delete from source if needed (for archive_delete or delete)
-                    if operation_type == 'archive_delete' or operation_type == 'delete':
-                        try:
+                        if operation_type == 'archive_delete':
                             delete_query = f"DELETE FROM {sschema_name}.{source_table_name} WHERE {id_column} = %s"
                             source_cur.execute(delete_query, (row_id,))
                             total_deleted += 1
-                            print(f"Record {row_id} deleted from {source_table_name}.")
-                        except psycopg2.Error as e:
-                            print(f"Error deleting record {row_id} from {source_table_name}: {e}")
-                            source_conn.rollback()
-                            continue
 
-                    # Update last_processed_id to the last row's ID processed
-                    last_processed_id = str(row_id)
+                    elif operation_type == 'delete':
+                        delete_query = f"DELETE FROM {sschema_name}.{source_table_name} WHERE {id_column} = %s"
+                        source_cur.execute(delete_query, (row_id,))
+                        total_deleted += 1
 
-                # Commit the transaction after processing the batch
-                archive_conn.commit()
+                    last_processed_id = row_id
+                    total_archived += 1 if operation_type in ['archive_delete', 'archive_nodelete'] else 0
+
                 source_conn.commit()
-                print(f"Batch processed for {archive_table_name}.")
+                archive_conn.commit()
 
-    except Exception as e:
-        print(f"Unexpected error occurred during the archival process: {e}")
-        if source_conn:
-            source_conn.rollback()
-        if archive_conn:
-            archive_conn.rollback()
+        print(f"Archiving complete for {db_name}. Total archived: {total_archived}, Total deleted: {total_deleted}, Total skipped: {total_skipped}")
+
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(f"Error while archiving data for {db_name}: {error}")
+        source_conn.rollback()
+        archive_conn.rollback()
 
     finally:
-        # Ensure cursors and connections are closed properly
         if source_cur:
             source_cur.close()
-        if source_conn:
-            source_conn.close()
         if archive_cur:
             archive_cur.close()
+        if source_conn:
+            release_connection(source_pool, source_conn, db_name)
         if archive_conn:
-            archive_conn.close()
+            release_connection(archive_pool, archive_conn)
 
-        # Print the summary for this database
-        print(f"Data archival completed for {db_name}.")
-        print(f"Total records archived: {total_archived}")
-        print(f"Total records deleted: {total_deleted}")
-        print(f"Total records skipped: {total_skipped}")
-
-
+# Main function
 def main():
-    try:
-        # Get configuration parameters
-        db_names, archive_param, source_param, batch_size = config()
-        print(f"Starting data archive process with BATCH_SIZE: {batch_size} for databases: {db_names}")
+    db_names, archive_param, source_param, batch_size = config()
 
-        # Use ThreadPoolExecutor to handle parallel processing
-        with ThreadPoolExecutor() as executor:
-            futures = {}
-            for db_name in db_names:
-                tables_info = read_tables_info(db_name)
-                # Submit the archival process to the executor
-                future = executor.submit(data_archive, db_name, {**archive_param, **source_param[db_name]}, tables_info, batch_size)
-                futures[future] = db_name  # Keep track of which future corresponds to which db_name
+    # Initialize connection pools
+    init_pools(archive_param, source_param)
 
-            for future in as_completed(futures):
-                db_name = futures[future]
-                try:
-                    future.result()  # This will raise any exception caught during execution
-                    print(f"Data archive process completed for {db_name}.")
-                except Exception as e:
-                    print(f"Error processing {db_name}: {e}")
+    # Process each database
+    for db_name in db_names:
+        tables_info = read_tables_info(db_name)
+        print(f"Processing {db_name} with tables: {tables_info}")
+        data_archive(db_name, source_param, tables_info, batch_size)
 
-    except Exception as e:
-        print(f"Error in main: {e}")
-        sys.exit(1)
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
