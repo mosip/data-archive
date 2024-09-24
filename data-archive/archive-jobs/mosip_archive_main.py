@@ -186,11 +186,11 @@ def init_connection_pools(archive_param, source_param):
     try:
         source_conn_pool = pool.SimpleConnectionPool(
             1, 10,  # minconn, maxconn
-            user=source_param['SOURCE_DB_UNAME'],
-            password=source_param['SOURCE_DB_PASS'],
-            host=source_param['SOURCE_DB_HOST'],
-            port=source_param['SOURCE_DB_PORT'],
-            database=source_param['SOURCE_DB_NAME']
+            user=db_param[f"{db_name}_SOURCE_DB_UNAME"],
+            password=db_param[f"{db_name}_SOURCE_DB_PASS"],
+            host=db_param[f"{db_name}_SOURCE_DB_HOST"],
+            port=db_param[f"{db_name}_SOURCE_DB_PORT"],
+            database=db_param[f"{db_name}_SOURCE_DB_NAME"]
         )
         print("Source DB connection pool created successfully.")
     except Exception as e:
@@ -201,11 +201,11 @@ def init_connection_pools(archive_param, source_param):
     try:
         archive_conn_pool = pool.SimpleConnectionPool(
             1, 10,  # minconn, maxconn
-            user=archive_param['ARCHIVE_DB_UNAME'],
-            password=archive_param['ARCHIVE_DB_PASS'],
-            host=archive_param['ARCHIVE_DB_HOST'],
-            port=archive_param['ARCHIVE_DB_PORT'],
-            database=archive_param['ARCHIVE_DB_NAME']
+            user=db_param["ARCHIVE_DB_UNAME"],
+            password=db_param["ARCHIVE_DB_PASS"],
+            host=db_param["ARCHIVE_DB_HOST"],
+            port=db_param["ARCHIVE_DB_PORT"],
+            database=db_param["ARCHIVE_DB_NAME"]
         )
         print("Archive DB connection pool created successfully.")
     except Exception as e:
