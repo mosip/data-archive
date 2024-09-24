@@ -106,9 +106,101 @@ def config():
             check_keys(required_source_keys, config_parser[db_name], prefix=db_name)
             source_param[db_name] = create_source_param(config_parser=config_parser, env_vars=os.environ, db_name=db_name)
     else:
-        print("Error: db.properties file not found.")
-        sys.exit(1)
+        # Handle case when db.properties file is not found
+        print("Error: db.properties file not found. Using environment variables.")
+        # Use environment variables
+        archive_param = {
+            'ARCHIVE_DB_HOST': os.environ.get('ARCHIVE_DB_HOST'),
+            'ARCHIVE_DB_PORT': os.environ.get('ARCHIVE_DB_PORT'),
+            'ARCHIVE_DB_NAME': os.environ.get('ARCHIVE_DB_NAME'),
+            'ARCHIVE_SCHEMA_NAME': os.environ.get('ARCHIVE_SCHEMA_NAME'),
+            'ARCHIVE_DB_UNAME': os.environ.get('ARCHIVE_DB_UNAME'),
+            'ARCHIVE_DB_PASS': os.environ.get('ARCHIVE_DB_PASS')
+        }
+        check_keys(required_archive_keys, archive_param)
 
+        # Extract batch size from environment variables if available
+        # batch_size_env = os.environ.get('BATCH_SIZE')
+        # if batch_size_env:
+        #     batch_size = int(batch_size_env)
+        #     print(f"Using BATCH_SIZE from environment variables: {batch_size}")
+
+        # Check environment variable for batch size if not found in config file
+        batch_size_env = os.environ.get('BATCH_SIZE')
+        if batch_size_env:
+            batch_size = int(batch_size_env)
+            print(f"Using BATCH_SIZE from environment variables: {batch_size}")
+        else:
+            print("Error: BATCH_SIZE not found in environment variables.")
+            sys.exit(1)
+
+        # Extract database names from environment variables
+        db_names_env = os.environ.get('DB_NAMES')
+        if db_names_env is not None:
+            db_names = [name.strip() for name in db_names_env.split(',')]
+        else:
+            print("Error: DB_NAMES not found in environment variables.")
+            sys.exit(1)
+
+        # Extract source parameters for each database from environment variables
+        for db_name in db_names:
+            required_source_keys = ['SOURCE_DB_HOST', 'SOURCE_DB_PORT', 'SOURCE_DB_NAME', 'SOURCE_SCHEMA_NAME', 'SOURCE_DB_UNAME', 'SOURCE_DB_PASS']
+            check_keys(required_source_keys, os.environ, prefix=db_name)
+            source_param[db_name] = create_source_param(config_parser=None, env_vars=os.environ, db_name=db_name)
+
+    # Return extracted parameters and dynamic batch size
+    return db_names, archive_param, source_param, batch_size
+
+# Function to create source parameters for a specific database
+def create_source_param(config_parser, env_vars, db_name):
+    param_keys = ['SOURCE_DB_HOST', 'SOURCE_DB_PORT', 'SOURCE_DB_NAME', 'SOURCE_SCHEMA_NAME', 'SOURCE_DB_UNAME', 'SOURCE_DB_PASS']
+    source_param = {}
+
+    for key in param_keys:
+        env_key = f'{db_name}_{key}'    else:
+        # Handle case when db.properties file is not found
+        print("Error: db.properties file not found. Using environment variables.")
+        # Use environment variables
+        archive_param = {
+            'ARCHIVE_DB_HOST': os.environ.get('ARCHIVE_DB_HOST'),
+            'ARCHIVE_DB_PORT': os.environ.get('ARCHIVE_DB_PORT'),
+            'ARCHIVE_DB_NAME': os.environ.get('ARCHIVE_DB_NAME'),
+            'ARCHIVE_SCHEMA_NAME': os.environ.get('ARCHIVE_SCHEMA_NAME'),
+            'ARCHIVE_DB_UNAME': os.environ.get('ARCHIVE_DB_UNAME'),
+            'ARCHIVE_DB_PASS': os.environ.get('ARCHIVE_DB_PASS')
+        }
+        check_keys(required_archive_keys, archive_param)
+
+        # Extract batch size from environment variables if available
+        # batch_size_env = os.environ.get('BATCH_SIZE')
+        # if batch_size_env:
+        #     batch_size = int(batch_size_env)
+        #     print(f"Using BATCH_SIZE from environment variables: {batch_size}")
+
+        # Check environment variable for batch size if not found in config file
+        batch_size_env = os.environ.get('BATCH_SIZE')
+        if batch_size_env:
+            batch_size = int(batch_size_env)
+            print(f"Using BATCH_SIZE from environment variables: {batch_size}")
+        else:
+            print("Error: BATCH_SIZE not found in environment variables.")
+            sys.exit(1)
+
+        # Extract database names from environment variables
+        db_names_env = os.environ.get('DB_NAMES')
+        if db_names_env is not None:
+            db_names = [name.strip() for name in db_names_env.split(',')]
+        else:
+            print("Error: DB_NAMES not found in environment variables.")
+            sys.exit(1)
+
+        # Extract source parameters for each database from environment variables
+        for db_name in db_names:
+            required_source_keys = ['SOURCE_DB_HOST', 'SOURCE_DB_PORT', 'SOURCE_DB_NAME', 'SOURCE_SCHEMA_NAME', 'SOURCE_DB_UNAME', 'SOURCE_DB_PASS']
+            check_keys(required_source_keys, os.environ, prefix=db_name)
+            source_param[db_name] = create_source_param(config_parser=None, env_vars=os.environ, db_name=db_name)
+
+    # Return extracted parameters and dynamic batch size
     return db_names, archive_param, source_param, batch_size
 
 # Function to create source parameters for a specific database
@@ -118,6 +210,15 @@ def create_source_param(config_parser, env_vars, db_name):
 
     for key in param_keys:
         env_key = f'{db_name}_{key}'
+        if config_parser is not None:
+            try:
+                source_param[env_key] = config_parser.get(db_name, env_key)
+            except (configparser.NoOptionError, configparser.NoSectionError):
+                source_param[env_key] = env_vars.get(env_key)
+        else:
+            source_param[env_key] = env_vars.get(env_key)
+
+    return source_param
         if config_parser is not None:
             try:
                 source_param[env_key] = config_parser.get(db_name, env_key)
