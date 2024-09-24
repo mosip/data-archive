@@ -9,6 +9,7 @@ import configparser
 import json
 from datetime import datetime
 from psycopg2 import extras
+from psycopg2 import pool
 
 # Define batch size
 #BATCH_SIZE = 10
