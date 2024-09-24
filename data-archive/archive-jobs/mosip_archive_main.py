@@ -9,6 +9,7 @@ import configparser
 import json
 from datetime import datetime
 from psycopg2 import extras
+from psycopg2 import pool
 
 # Define batch size
 #BATCH_SIZE = 10
@@ -176,10 +177,10 @@ def read_tables_info(db_name):
             print("Container volume path not provided. Exiting.")
             sys.exit(1)
 
-# Function to archive data from source database to archive databas
+
 def data_archive(db_name, db_param, tables_info, batch_size):
-    source_conn = None
-    archive_conn = None
+    source_pool = None
+    archive_pool = None
     source_cur = None
     archive_cur = None
 
@@ -190,23 +191,31 @@ def data_archive(db_name, db_param, tables_info, batch_size):
     try:
         print(f'Connecting to the PostgreSQL source and archive databases for {db_name}...')
 
-        # Establish connection to the source database
-        source_conn = psycopg2.connect(
+        # Create connection pools
+        source_pool = pool.SimpleConnectionPool(
+            1, 10,  # min and max connections
             user=db_param[f"{db_name}_SOURCE_DB_UNAME"],
             password=db_param[f"{db_name}_SOURCE_DB_PASS"],
             host=db_param[f"{db_name}_SOURCE_DB_HOST"],
             port=db_param[f"{db_name}_SOURCE_DB_PORT"],
             database=db_param[f"{db_name}_SOURCE_DB_NAME"]
         )
-
-        # Establish connection to the archive database
-        archive_conn = psycopg2.connect(
+        
+        archive_pool = pool.SimpleConnectionPool(
+            1, 10,  # min and max connections
             user=db_param["ARCHIVE_DB_UNAME"],
             password=db_param["ARCHIVE_DB_PASS"],
             host=db_param["ARCHIVE_DB_HOST"],
             port=db_param["ARCHIVE_DB_PORT"],
             database=db_param["ARCHIVE_DB_NAME"]
         )
+
+        # Print pool information
+        print(f"Source Pool: {source_pool}")
+        print(f"Archive Pool: {archive_pool}")
+
+        source_conn = source_pool.getconn()
+        archive_conn = archive_pool.getconn()
 
         source_cur = source_conn.cursor()
         archive_cur = archive_conn.cursor()
@@ -312,18 +321,21 @@ def data_archive(db_name, db_param, tables_info, batch_size):
         if source_cur:
             source_cur.close()
         if source_conn:
-            source_conn.close()
+            source_pool.putconn(source_conn)  # Return connection to pool
         if archive_cur:
             archive_cur.close()
         if archive_conn:
-            archive_conn.close()
+            archive_pool.putconn(archive_conn)  # Return connection to pool
+        if source_pool:
+            source_pool.closeall()  # Close all connections in the pool
+        if archive_pool:
+            archive_pool.closeall()  # Close all connections in the pool
 
         # Print the summary for this database
         print(f"Data archival completed for {db_name}.")
         print(f"Total records archived: {total_archived}")
         print(f"Total records deleted: {total_deleted}")
         print(f"Total records skipped: {total_skipped}")
-
 
 def main():
     try:
