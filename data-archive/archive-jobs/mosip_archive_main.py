@@ -9,12 +9,10 @@ import configparser
 import json
 from datetime import datetime
 from psycopg2 import extras
-from psycopg2 import pool
 
 # Define batch size
 #BATCH_SIZE = 10
-source_conn_pool = None
-archive_conn_pool = None
+
 # Function to check if required keys are present in a section
 def check_keys(keys, section, prefix=""):
     missing_keys = []
@@ -178,45 +176,7 @@ def read_tables_info(db_name):
             print("Container volume path not provided. Exiting.")
             sys.exit(1)
 
-# Function to initialize connection pools
-def init_connection_pools(archive_param, source_param):
-    global source_conn_pool, archive_conn_pool
-
-    # Print the archive and source parameters for debugging
-    print("Fetching connection pools...")
-    print("Archive Parameters:", archive_param)
-    print("Source Parameters:", source_param)
-    # Initialize source database connection pool
-    try:
-        source_conn_pool = pool.SimpleConnectionPool(
-            1, 10,  # minconn, maxconn
-            user=db_param[f"{db_name}_SOURCE_DB_UNAME"],
-            password=db_param[f"{db_name}_SOURCE_DB_PASS"],
-            host=db_param[f"{db_name}_SOURCE_DB_HOST"],
-            port=db_param[f"{db_name}_SOURCE_DB_PORT"],
-            database=db_param[f"{db_name}_SOURCE_DB_NAME"]
-        )
-        print("Source DB connection pool created successfully.")
-    except Exception as e:
-        print(f"Error creating source DB connection pool: {e}")
-        sys.exit(1)
-
-    # Initialize archive database connection pool
-    try:
-        archive_conn_pool = pool.SimpleConnectionPool(
-            1, 10,  # minconn, maxconn
-            user=db_param["ARCHIVE_DB_UNAME"],
-            password=db_param["ARCHIVE_DB_PASS"],
-            host=db_param["ARCHIVE_DB_HOST"],
-            port=db_param["ARCHIVE_DB_PORT"],
-            database=db_param["ARCHIVE_DB_NAME"]
-        )
-        print("Archive DB connection pool created successfully.")
-    except Exception as e:
-        print(f"Error creating archive DB connection pool: {e}")
-        sys.exit(1)
-
-# Function to archive data from source database to archive database
+# Function to archive data from source database to archive databas
 def data_archive(db_name, db_param, tables_info, batch_size):
     source_conn = None
     archive_conn = None
@@ -228,15 +188,25 @@ def data_archive(db_name, db_param, tables_info, batch_size):
     total_skipped = 0
 
     try:
-        print(f"Fetching connections from connection pools for {db_name}...")
+        print(f'Connecting to the PostgreSQL source and archive databases for {db_name}...')
 
-        # Fetch connection from source pool
-        source_conn = source_conn_pool.getconn()
-        print(f"Source DB connection obtained from pool for {db_name}.")
+        # Establish connection to the source database
+        source_conn = psycopg2.connect(
+            user=db_param[f"{db_name}_SOURCE_DB_UNAME"],
+            password=db_param[f"{db_name}_SOURCE_DB_PASS"],
+            host=db_param[f"{db_name}_SOURCE_DB_HOST"],
+            port=db_param[f"{db_name}_SOURCE_DB_PORT"],
+            database=db_param[f"{db_name}_SOURCE_DB_NAME"]
+        )
 
-        # Fetch connection from archive pool
-        archive_conn = archive_conn_pool.getconn()
-        print(f"Archive DB connection obtained from pool.")
+        # Establish connection to the archive database
+        archive_conn = psycopg2.connect(
+            user=db_param["ARCHIVE_DB_UNAME"],
+            password=db_param["ARCHIVE_DB_PASS"],
+            host=db_param["ARCHIVE_DB_HOST"],
+            port=db_param["ARCHIVE_DB_PORT"],
+            database=db_param["ARCHIVE_DB_NAME"]
+        )
 
         source_cur = source_conn.cursor()
         archive_cur = archive_conn.cursor()
@@ -322,22 +292,32 @@ def data_archive(db_name, db_param, tables_info, batch_size):
                             source_conn.rollback()
                             continue
 
-                # Update last processed ID
-                last_processed_id = row_id
+                    # Update last_processed_id to the last row's ID processed
+                    last_processed_id = str(row_id)
 
-            source_conn.commit()
-            archive_conn.commit()
+                # Commit the transaction after processing the batch
+                archive_conn.commit()
+                source_conn.commit()
+                print(f"Batch processed for {archive_table_name}.")
 
     except Exception as e:
-        print(f"Error archiving data for {db_name}: {e}")
-    finally:
-        # Release connections back to the pool
+        print(f"Unexpected error occurred during the archival process: {e}")
         if source_conn:
-            source_conn_pool.putconn(source_conn)
-            print(f"Source DB connection returned to pool for {db_name}.")
+            source_conn.rollback()
         if archive_conn:
-            archive_conn_pool.putconn(archive_conn)
-            print(f"Archive DB connection returned to pool.")
+            archive_conn.rollback()
+
+    finally:
+        # Ensure cursors and connections are closed properly
+        if source_cur:
+            source_cur.close()
+        if source_conn:
+            source_conn.close()
+        if archive_cur:
+            archive_cur.close()
+        if archive_conn:
+            archive_conn.close()
+
         # Print the summary for this database
         print(f"Data archival completed for {db_name}.")
         print(f"Total records archived: {total_archived}")
