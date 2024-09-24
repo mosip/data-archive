@@ -182,6 +182,10 @@ def read_tables_info(db_name):
 def init_connection_pools(archive_param, source_param):
     global source_conn_pool, archive_conn_pool
 
+    # Print the archive and source parameters for debugging
+    print("Fetching connection pools...")
+    print("Archive Parameters:", archive_param)
+    print("Source Parameters:", source_param)
     # Initialize source database connection pool
     try:
         source_conn_pool = pool.SimpleConnectionPool(
