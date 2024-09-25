@@ -57,7 +57,7 @@ def config():
             batch_size = int(config_parser['ARCHIVE']['BATCH_SIZE'])
             print(f"Using BATCH_SIZE from db.properties: {batch_size}")
         else:
-            print("Error: BATCH_SIZE not found in db.properties.")
+            print("BATCH_SIZE not found in db.properties.")
             # Check environment variable for batch size if not found in config file
             batch_size_env = os.environ.get('BATCH_SIZE')
             if batch_size_env:
@@ -74,7 +74,7 @@ def config():
             source_param[db_name] = create_source_param(config_parser=config_parser, env_vars=os.environ, db_name=db_name)
     else:
         # Handle case when db.properties file is not found
-        print("Error: db.properties file not found. Using environment variables.")
+        print("db.properties file not found. Using environment variables.")
         # Use environment variables
         archive_param = {
             'ARCHIVE_DB_HOST': os.environ.get('ARCHIVE_DB_HOST'),
