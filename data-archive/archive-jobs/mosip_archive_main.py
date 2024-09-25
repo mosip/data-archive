@@ -189,30 +189,31 @@ def data_archive(db_name, db_param, tables_info, batch_size):
     try:
         print(f'Connecting to the PostgreSQL source and archive databases for {db_name}...')
 
-        # Create connection pools for source and archive databases
-        source_pool = pool.SimpleConnectionPool(
-            1,  # Minimum number of connections
-            10,  # Maximum number of connections
-            user=db_param[f"{db_name}_SOURCE_DB_UNAME"],
-            password=db_param[f"{db_name}_SOURCE_DB_PASS"],
-            host=db_param[f"{db_name}_SOURCE_DB_HOST"],
-            port=db_param[f"{db_name}_SOURCE_DB_PORT"],
-            database=db_param[f"{db_name}_SOURCE_DB_NAME"]
-        )
+        # Establish connection to the source database
+        try:
+            source_conn = psycopg2.connect(
+                user=db_param[f"{db_name}_SOURCE_DB_UNAME"],
+                password=db_param[f"{db_name}_SOURCE_DB_PASS"],
+                host=db_param[f"{db_name}_SOURCE_DB_HOST"],
+                port=db_param[f"{db_name}_SOURCE_DB_PORT"],
+                database=db_param[f"{db_name}_SOURCE_DB_NAME"]
+            )
+        except psycopg2.OperationalError as e:
+            print(f"Error connecting to the source database for {db_name}: {e}")
+            sys.exit(1)
 
-        archive_pool = pool.SimpleConnectionPool(
-            1,  # Minimum number of connections
-            10,  # Maximum number of connections
-            user=db_param["ARCHIVE_DB_UNAME"],
-            password=db_param["ARCHIVE_DB_PASS"],
-            host=db_param["ARCHIVE_DB_HOST"],
-            port=db_param["ARCHIVE_DB_PORT"],
-            database=db_param["ARCHIVE_DB_NAME"]
-        )
-
-        # Get connections from the pool
-        source_conn = source_pool.getconn()
-        archive_conn = archive_pool.getconn()
+        # Establish connection to the archive database
+        try:
+            archive_conn = psycopg2.connect(
+                user=db_param["ARCHIVE_DB_UNAME"],
+                password=db_param["ARCHIVE_DB_PASS"],
+                host=db_param["ARCHIVE_DB_HOST"],
+                port=db_param["ARCHIVE_DB_PORT"],
+                database=db_param["ARCHIVE_DB_NAME"]
+            )
+        except psycopg2.OperationalError as e:
+            print(f"Error connecting to the archive database: {e}")
+            sys.exit(1)
 
         source_cur = source_conn.cursor()
         archive_cur = archive_conn.cursor()
@@ -333,24 +334,19 @@ def data_archive(db_name, db_param, tables_info, batch_size):
         if source_cur is not None:
             source_cur.close()
         if source_conn is not None:
-            source_pool.putconn(source_conn)  # Return the connection to the pool
-            print(f'Source database connection for {db_name} returned to the pool.')
+            source_conn.close()
+            print(f'Source database connection for {db_name} closed.')
         if archive_cur is not None:
             archive_cur.close()
         if archive_conn is not None:
-            archive_pool.putconn(archive_conn)  # Return the connection to the pool
-            print('Archive database connection returned to the pool.')
-
-        # Close the pools
-        if source_pool is not None:
-            source_pool.closeall()
-        if archive_pool is not None:
-            archive_pool.closeall()
+            archive_conn.close()
+            print('Archive database connection closed.')
 
         print(f"Data archival completed for {db_name}.")
         print(f"Total records archived: {total_archived}")
         print(f"Total records deleted: {total_deleted}")
         print(f"Total batches processed for {db_name}: {total_batches_processed}")
+
 
 def main():
     try:
