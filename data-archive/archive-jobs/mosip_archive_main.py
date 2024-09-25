@@ -10,9 +10,7 @@ import json
 from datetime import datetime
 from psycopg2 import extras
 from psycopg2 import pool
-
-# Define batch size
-#BATCH_SIZE = 10
+from psycopg2.extras import execute_values
 
 # Function to check if required keys are present in a section
 def check_keys(keys, section, prefix=""):
@@ -137,15 +135,16 @@ def create_source_param(config_parser, env_vars, db_name):
 
     return source_param
 
-# Function to get formatted values for a row in a table
 def get_tablevalues(row):
     final_values = ""
     for value in row:
         if value is None:
             final_values += "NULL,"
         else:
-            final_values += "'" + str(value).replace("'", "''") + "',"
-    final_values = final_values[:-1]
+            # Escape single quotes by doubling them
+            escaped_value = str(value).replace("'", "''")
+            final_values += f"'{escaped_value}',"
+    final_values = final_values[:-1]  # Remove the trailing comma
     return final_values
 
 # Function to read table information from a JSON file or container volume
@@ -177,32 +176,33 @@ def read_tables_info(db_name):
             print("Container volume path not provided. Exiting.")
             sys.exit(1)
 
-
 def data_archive(db_name, db_param, tables_info, batch_size):
-    source_pool = None
-    archive_pool = None
+    source_conn = None
+    archive_conn = None
     source_cur = None
     archive_cur = None
 
     total_archived = 0
     total_deleted = 0
-    total_skipped = 0
+    total_batches_processed = 0  # Counter for total batches processed
 
     try:
         print(f'Connecting to the PostgreSQL source and archive databases for {db_name}...')
 
-        # Create connection pools
+        # Create connection pools for source and archive databases
         source_pool = pool.SimpleConnectionPool(
-            1, 10,  # min and max connections
+            1,  # Minimum number of connections
+            10,  # Maximum number of connections
             user=db_param[f"{db_name}_SOURCE_DB_UNAME"],
             password=db_param[f"{db_name}_SOURCE_DB_PASS"],
             host=db_param[f"{db_name}_SOURCE_DB_HOST"],
             port=db_param[f"{db_name}_SOURCE_DB_PORT"],
             database=db_param[f"{db_name}_SOURCE_DB_NAME"]
         )
-        
+
         archive_pool = pool.SimpleConnectionPool(
-            1, 10,  # min and max connections
+            1,  # Minimum number of connections
+            10,  # Maximum number of connections
             user=db_param["ARCHIVE_DB_UNAME"],
             password=db_param["ARCHIVE_DB_PASS"],
             host=db_param["ARCHIVE_DB_HOST"],
@@ -210,10 +210,7 @@ def data_archive(db_name, db_param, tables_info, batch_size):
             database=db_param["ARCHIVE_DB_NAME"]
         )
 
-        # Print pool information
-        print(f"Source Pool: {source_pool}")
-        print(f"Archive Pool: {archive_pool}")
-
+        # Get connections from the pool
         source_conn = source_pool.getconn()
         archive_conn = archive_pool.getconn()
 
@@ -226,17 +223,20 @@ def data_archive(db_name, db_param, tables_info, batch_size):
             source_table_name = table_info['source_table']
             archive_table_name = table_info['archive_table']
             id_column = table_info['id_column']
-            date_column = table_info.get('date_column', None)
-            retention_days = table_info.get('retention_days', None)
             operation_type = table_info.get('operation_type', 'none').lower()
-
-            last_processed_id = None  # Initialize last processed ID
+            batch_count = 0  # Counter for batches for the current table
+            # Skip the table if operation_type is 'none'
+            if operation_type == 'none':
+                print(f"Skipping archival for table {source_table_name} as operation type is 'none'.")
+                continue
 
             # Prepare the select query based on operation type and retention settings
-            if retention_days and date_column:
-                where_clause = f"WHERE {date_column} < NOW() - INTERVAL '{retention_days} days' AND {id_column} > %s"
+            if 'retention_days' in table_info and 'date_column' in table_info:
+                date_column = table_info['date_column']
+                retention_days = table_info['retention_days']
+                where_clause = f"WHERE {date_column} < NOW() - INTERVAL '{retention_days} days'"
             else:
-                where_clause = f"WHERE {id_column} > %s"
+                where_clause = ""
 
             while True:
                 # SELECT query for operation_type delete
@@ -246,68 +246,81 @@ def data_archive(db_name, db_param, tables_info, batch_size):
                 # SELECT query for operation_type archive_delete
                 elif operation_type == 'archive_delete':
                     select_query = f"SELECT * FROM {sschema_name}.{source_table_name} {where_clause} ORDER BY {id_column} LIMIT %s"
+                else:
+                    print(f"Unsupported operation type '{operation_type}' for table {source_table_name}. Skipping table.")
+                    break  # Skip the unsupported operation type
 
-                # SELECT query for operation_type archive_nodelete
-                elif operation_type == 'archive_nodelete':
-                    select_query = f"SELECT * FROM {sschema_name}.{source_table_name} {where_clause} ORDER BY {id_column} LIMIT %s"
+                try:
+                    # Execute the SELECT query
+                    source_cur.execute(select_query, (batch_size,))
+                    rows = source_cur.fetchall()
 
-                # Skip the processing if operation_type is 'none'
-                elif operation_type == 'none':
-                    print(f"No operation specified for {source_table_name}, skipping.")
-                    break
+                    if not rows:
+                        print(f"No more records to process for {source_table_name}.")
+                        break
 
-                # Execute the select query
-                source_cur.execute(select_query, (last_processed_id if last_processed_id else '0', batch_size))
-                rows = source_cur.fetchall()
+                except psycopg2.Error as e:
+                    print(f"Error executing SELECT query on {source_table_name}: {e}")
+                    source_conn.rollback()
+                    continue
 
-                if not rows:
-                    print(f"No more records to process for {source_table_name}.")
-                    break
+                # Increment the batch count and print
+                batch_count += 1
+                print(f"Starting batch {batch_count} for table {source_table_name}...")
+
+                # Accumulate records for bulk insert or delete
+                bulk_insert_values = []
+                ids_to_delete = []
 
                 for row in rows:
-                    row_id = row[0]
-                    values = get_tablevalues(row)
+                    row_id = row[0]  # Assuming the first column is the id_column
+                    if operation_type == 'archive_delete':
+                        values = get_tablevalues(row)
+                        bulk_insert_values.append(f"({values})")
+                    ids_to_delete.append(row_id)
 
-                    # Check for existence before inserting for archive_delete and archive_nodelete
-                    if operation_type in ['archive_delete', 'archive_nodelete']:
-                        check_query = f"SELECT 1 FROM {aschema_name}.{archive_table_name} WHERE {id_column} = %s"
-                        archive_cur.execute(check_query, (row_id,))
-                        exists = archive_cur.fetchone()
+                # If the operation type is archive_delete, proceed with the insert
+                if operation_type == 'archive_delete' and bulk_insert_values:
+                    try:
+                        # Bulk insert into the archive database
+                        bulk_insert_query = f"""
+                        INSERT INTO {aschema_name}.{archive_table_name} VALUES {', '.join(bulk_insert_values)}
+                        ON CONFLICT DO NOTHING
+                        """
+                        archive_cur.execute(bulk_insert_query)
 
-                        if exists:
-                            total_skipped += 1
-                            print(f"Record {row_id} already exists in {archive_table_name}, skipping.")
-                        else:
-                            try:
-                                # Insert the record into the archive database
-                                insert_query = f"INSERT INTO {aschema_name}.{archive_table_name} VALUES ({values})"
-                                archive_cur.execute(insert_query)
-                                total_archived += 1
-                                print(f"Record {row_id} inserted into {archive_table_name}.")
-                            except psycopg2.Error as e:
-                                print(f"Error inserting record {row_id} into {archive_table_name}: {e}")
-                                archive_conn.rollback()
-                                continue
+                        total_archived += len(bulk_insert_values)
+                        print(f"Batch inserted into {archive_table_name}.")
 
-                    # Delete from source if needed (for archive_delete or delete)
-                    if operation_type == 'archive_delete' or operation_type == 'delete':
-                        try:
-                            delete_query = f"DELETE FROM {sschema_name}.{source_table_name} WHERE {id_column} = %s"
-                            source_cur.execute(delete_query, (row_id,))
-                            total_deleted += 1
-                            print(f"Record {row_id} deleted from {source_table_name}.")
-                        except psycopg2.Error as e:
-                            print(f"Error deleting record {row_id} from {source_table_name}: {e}")
-                            source_conn.rollback()
-                            continue
+                    except psycopg2.Error as e:
+                        print(f"Error during bulk insertion into {archive_table_name}: {e}")
+                        archive_conn.rollback()
+                        continue
 
-                    # Update last_processed_id to the last row's ID processed
-                    last_processed_id = str(row_id)
+                # Bulk delete from the source database
+                if ids_to_delete:
+                    try:
+                        delete_query = f"DELETE FROM {sschema_name}.{source_table_name} WHERE {id_column} IN %s"
+                        source_cur.execute(delete_query, (tuple(ids_to_delete),))
+                        total_deleted += len(ids_to_delete)
+                        print(f"Records deleted from {source_table_name}.")
+
+                    except psycopg2.Error as e:
+                        print(f"Error during deletion from {source_table_name}: {e}")
+                        source_conn.rollback()
+                        continue
 
                 # Commit the transaction after processing the batch
-                archive_conn.commit()
-                source_conn.commit()
-                print(f"Batch processed for {archive_table_name}.")
+                try:
+                    archive_conn.commit()
+                    source_conn.commit()
+                    print(f"Batch processed for {archive_table_name}.")
+                except psycopg2.Error as e:
+                    print(f"Error committing transaction for {archive_table_name}: {e}")
+                    archive_conn.rollback()
+                    source_conn.rollback()
+
+                total_batches_processed += 1  # Increment total batches processed
 
     except Exception as e:
         print(f"Unexpected error occurred during the archival process: {e}")
@@ -317,25 +330,27 @@ def data_archive(db_name, db_param, tables_info, batch_size):
             archive_conn.rollback()
 
     finally:
-        # Ensure cursors and connections are closed properly
-        if source_cur:
+        if source_cur is not None:
             source_cur.close()
-        if source_conn:
-            source_pool.putconn(source_conn)  # Return connection to pool
-        if archive_cur:
+        if source_conn is not None:
+            source_pool.putconn(source_conn)  # Return the connection to the pool
+            print(f'Source database connection for {db_name} returned to the pool.')
+        if archive_cur is not None:
             archive_cur.close()
-        if archive_conn:
-            archive_pool.putconn(archive_conn)  # Return connection to pool
-        if source_pool:
-            source_pool.closeall()  # Close all connections in the pool
-        if archive_pool:
-            archive_pool.closeall()  # Close all connections in the pool
+        if archive_conn is not None:
+            archive_pool.putconn(archive_conn)  # Return the connection to the pool
+            print('Archive database connection returned to the pool.')
 
-        # Print the summary for this database
+        # Close the pools
+        if source_pool is not None:
+            source_pool.closeall()
+        if archive_pool is not None:
+            archive_pool.closeall()
+
         print(f"Data archival completed for {db_name}.")
         print(f"Total records archived: {total_archived}")
         print(f"Total records deleted: {total_deleted}")
-        print(f"Total records skipped: {total_skipped}")
+        print(f"Total batches processed for {db_name}: {total_batches_processed}")
 
 def main():
     try:
