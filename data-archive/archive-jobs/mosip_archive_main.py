@@ -277,7 +277,7 @@ def data_archive(db_name, db_param, tables_info, batch_size):
                         except psycopg2.Error as e:
                             print(f"Error during bulk insertion into {archive_table_name}: {e}")
                             archive_conn.rollback()
-                            continue
+                            break  # Exit the while loop on error
 
                     # Bulk delete from the source database
                     if ids_to_delete:
@@ -289,7 +289,7 @@ def data_archive(db_name, db_param, tables_info, batch_size):
                         except psycopg2.Error as e:
                             print(f"Error during deletion from {source_table_name}: {e}")
                             source_conn.rollback()
-                            continue
+                            break  # Exit the while loop on error
 
                     # Commit the transaction after processing the batch
                     try:
@@ -300,13 +300,14 @@ def data_archive(db_name, db_param, tables_info, batch_size):
                         print(f"Error committing transaction for {archive_table_name}: {e}")
                         archive_conn.rollback()
                         source_conn.rollback()
+                        break  # Exit the while loop on error
 
                     total_batches_processed += 1  # Increment total batches processed
 
                 except psycopg2.Error as e:
                     print(f"Error executing SELECT query on {source_table_name}: {e}")
                     source_conn.rollback()
-                    continue
+                    break  # Exit the while loop on error
 
     except Exception as e:
         print(f"Unexpected error occurred during the archival process: {e}")
@@ -314,6 +315,7 @@ def data_archive(db_name, db_param, tables_info, batch_size):
             source_conn.rollback()
         if archive_conn:
             archive_conn.rollback()
+        sys.exit(1)  # Exit with error status
 
     finally:
         # Close connections and clean up
@@ -348,7 +350,7 @@ def main():
 
     except Exception as e:
         print(f"Error in main: {e}")
-        sys.exit(1)
+        sys.exit(1)  # Ensure exit with error status
 
 if __name__ == "__main__":
     main()
