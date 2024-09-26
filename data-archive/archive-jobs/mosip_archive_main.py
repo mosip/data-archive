@@ -189,34 +189,36 @@ def data_archive(db_name, db_param, tables_info, batch_size):
     try:
         print(f'Connecting to the PostgreSQL source and archive databases for {db_name}...')
 
-        # Establish connection to the source database
+        # Establish connection to the source database with synchronous_commit set to off
         try:
             source_conn = psycopg2.connect(
                 user=db_param[f"{db_name}_SOURCE_DB_UNAME"],
                 password=db_param[f"{db_name}_SOURCE_DB_PASS"],
                 host=db_param[f"{db_name}_SOURCE_DB_HOST"],
                 port=db_param[f"{db_name}_SOURCE_DB_PORT"],
-                database=db_param[f"{db_name}_SOURCE_DB_NAME"]
+                database=db_param[f"{db_name}_SOURCE_DB_NAME"],
+                options="-c synchronous_commit=off"  # Set synchronous_commit to off for this session
             )
+            source_cur = source_conn.cursor()
         except psycopg2.OperationalError as e:
             print(f"Error connecting to the source database for {db_name}: {e}")
             sys.exit(1)
 
-        # Establish connection to the archive database
+        # Establish connection to the archive database with synchronous_commit set to off
         try:
             archive_conn = psycopg2.connect(
                 user=db_param["ARCHIVE_DB_UNAME"],
                 password=db_param["ARCHIVE_DB_PASS"],
                 host=db_param["ARCHIVE_DB_HOST"],
                 port=db_param["ARCHIVE_DB_PORT"],
-                database=db_param["ARCHIVE_DB_NAME"]
+                database=db_param["ARCHIVE_DB_NAME"],
+                options="-c synchronous_commit=off"  # Set synchronous_commit to off for this session
             )
+            archive_cur = archive_conn.cursor()
         except psycopg2.OperationalError as e:
             print(f"Error connecting to the archive database: {e}")
             sys.exit(1)
 
-        source_cur = source_conn.cursor()
-        archive_cur = archive_conn.cursor()
         sschema_name = db_param[f"{db_name}_SOURCE_SCHEMA_NAME"]
         aschema_name = db_param["ARCHIVE_SCHEMA_NAME"]
 
@@ -226,6 +228,7 @@ def data_archive(db_name, db_param, tables_info, batch_size):
             id_column = table_info['id_column']
             operation_type = table_info.get('operation_type', 'none').lower()
             batch_count = 0  # Counter for batches for the current table
+
             # Skip the table if operation_type is 'none'
             if operation_type == 'none':
                 print(f"Skipping archival for table {source_table_name} as operation type is 'none'.")
@@ -240,18 +243,10 @@ def data_archive(db_name, db_param, tables_info, batch_size):
                 where_clause = ""
 
             while True:
-                # SELECT query for operation_type delete
-                if operation_type == 'delete':
-                    select_query = f"SELECT * FROM {sschema_name}.{source_table_name} {where_clause} ORDER BY {id_column} LIMIT %s"
-
-                # SELECT query for operation_type archive_delete
-                elif operation_type == 'archive_delete':
-                    select_query = f"SELECT * FROM {sschema_name}.{source_table_name} {where_clause} ORDER BY {id_column} LIMIT %s"
-                else:
-                    print(f"Unsupported operation type '{operation_type}' for table {source_table_name}. Skipping table.")
-                    break  # Skip the unsupported operation type
-
                 try:
+                    # Prepare the SELECT query based on operation type
+                    select_query = f"SELECT * FROM {sschema_name}.{source_table_name} {where_clause} ORDER BY {id_column} LIMIT %s"
+
                     # Execute the SELECT query
                     source_cur.execute(select_query, (batch_size,))
                     rows = source_cur.fetchall()
@@ -260,68 +255,58 @@ def data_archive(db_name, db_param, tables_info, batch_size):
                         print(f"No more records to process for {source_table_name}.")
                         break
 
+                    # Increment the batch count and print
+                    batch_count += 1
+                    print(f"Starting batch {batch_count} for table {source_table_name}...")
+
+                    # Accumulate records for bulk insert or delete
+                    bulk_insert_values = [get_tablevalues(row) for row in rows]
+                    ids_to_delete = [row[0] for row in rows]  # Assuming the first column is the id_column
+
+                    # If the operation type is archive_delete, proceed with the bulk insert
+                    if operation_type == 'archive_delete' and bulk_insert_values:
+                        try:
+                            # Use execute_values for faster bulk insert into the archive database
+                            execute_values(
+                                archive_cur,
+                                f"INSERT INTO {aschema_name}.{archive_table_name} VALUES %s ON CONFLICT DO NOTHING",
+                                [tuple(row) for row in rows]
+                            )
+                            total_archived += len(bulk_insert_values)
+                            print(f"Batch inserted into {archive_table_name}.")
+                        except psycopg2.Error as e:
+                            print(f"Error during bulk insertion into {archive_table_name}: {e}")
+                            archive_conn.rollback()
+                            continue
+
+                    # Bulk delete from the source database
+                    if ids_to_delete:
+                        try:
+                            delete_query = f"DELETE FROM {sschema_name}.{source_table_name} WHERE {id_column} IN %s"
+                            source_cur.execute(delete_query, (tuple(ids_to_delete),))
+                            total_deleted += len(ids_to_delete)
+                            print(f"Records deleted from {source_table_name}.")
+                        except psycopg2.Error as e:
+                            print(f"Error during deletion from {source_table_name}: {e}")
+                            source_conn.rollback()
+                            continue
+
+                    # Commit the transaction after processing the batch
+                    try:
+                        archive_conn.commit()
+                        source_conn.commit()
+                        print(f"Batch processed for {archive_table_name}.")
+                    except psycopg2.Error as e:
+                        print(f"Error committing transaction for {archive_table_name}: {e}")
+                        archive_conn.rollback()
+                        source_conn.rollback()
+
+                    total_batches_processed += 1  # Increment total batches processed
+
                 except psycopg2.Error as e:
                     print(f"Error executing SELECT query on {source_table_name}: {e}")
                     source_conn.rollback()
                     continue
-
-                # Increment the batch count and print
-                batch_count += 1
-                print(f"Starting batch {batch_count} for table {source_table_name}...")
-
-                # Accumulate records for bulk insert or delete
-                bulk_insert_values = []
-                ids_to_delete = []
-
-                for row in rows:
-                    row_id = row[0]  # Assuming the first column is the id_column
-                    if operation_type == 'archive_delete':
-                        values = get_tablevalues(row)
-                        bulk_insert_values.append(f"({values})")
-                    ids_to_delete.append(row_id)
-
-                # If the operation type is archive_delete, proceed with the insert
-                if operation_type == 'archive_delete' and bulk_insert_values:
-                    try:
-                        # Bulk insert into the archive database
-                        bulk_insert_query = f"""
-                        INSERT INTO {aschema_name}.{archive_table_name} VALUES {', '.join(bulk_insert_values)}
-                        ON CONFLICT DO NOTHING
-                        """
-                        archive_cur.execute(bulk_insert_query)
-
-                        total_archived += len(bulk_insert_values)
-                        print(f"Batch inserted into {archive_table_name}.")
-
-                    except psycopg2.Error as e:
-                        print(f"Error during bulk insertion into {archive_table_name}: {e}")
-                        archive_conn.rollback()
-                        continue
-
-                # Bulk delete from the source database
-                if ids_to_delete:
-                    try:
-                        delete_query = f"DELETE FROM {sschema_name}.{source_table_name} WHERE {id_column} IN %s"
-                        source_cur.execute(delete_query, (tuple(ids_to_delete),))
-                        total_deleted += len(ids_to_delete)
-                        print(f"Records deleted from {source_table_name}.")
-
-                    except psycopg2.Error as e:
-                        print(f"Error during deletion from {source_table_name}: {e}")
-                        source_conn.rollback()
-                        continue
-
-                # Commit the transaction after processing the batch
-                try:
-                    archive_conn.commit()
-                    source_conn.commit()
-                    print(f"Batch processed for {archive_table_name}.")
-                except psycopg2.Error as e:
-                    print(f"Error committing transaction for {archive_table_name}: {e}")
-                    archive_conn.rollback()
-                    source_conn.rollback()
-
-                total_batches_processed += 1  # Increment total batches processed
 
     except Exception as e:
         print(f"Unexpected error occurred during the archival process: {e}")
@@ -331,6 +316,7 @@ def data_archive(db_name, db_param, tables_info, batch_size):
             archive_conn.rollback()
 
     finally:
+        # Close connections and clean up
         if source_cur is not None:
             source_cur.close()
         if source_conn is not None:
