@@ -19,8 +19,7 @@ RUN apt-get update && \
         python3-pip \
         python3-xlrd \
         python3.11-venv \
-        curl \
-        git && \
+        curl && \
     rm -rf /var/lib/apt/lists/*
 
 # Set up virtual environment
