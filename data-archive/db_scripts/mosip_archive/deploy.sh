@@ -15,13 +15,25 @@ else
      echo `date "+%m/%d/%Y %H:%M:%S"` ": Property file not found, Pass property file name as argument."
 fi
 
+# ## Terminate existing connections
+# echo "Terminating active connections" 
+# CONN=$(PGPASSWORD=$SU_USER_PWD psql -v ON_ERROR_STOP=1 --username=$SU_USER --host=$DB_SERVERIP --port=$DB_PORT --dbname=$DEFAULT_DB_NAME -t -c "SELECT count(pg_terminate_backend(pg_stat_activity.pid)) FROM pg_stat_activity WHERE datname = '$MOSIP_DB_NAME' AND pid <> pg_backend_pid()";exit;)
+# echo "Terminated connections"
+
+# ## Create users
+# echo `date "+%m/%d/%Y %H:%M:%S"` ": Creating database users"
+
 ## Terminate existing connections
-echo "Terminating active connections" 
-CONN=$(PGPASSWORD=$SU_USER_PWD psql -v ON_ERROR_STOP=1 --username=$SU_USER --host=$DB_SERVERIP --port=$DB_PORT --dbname=$DEFAULT_DB_NAME -t -c "SELECT count(pg_terminate_backend(pg_stat_activity.pid)) FROM pg_stat_activity WHERE datname = '$MOSIP_DB_NAME' AND pid <> pg_backend_pid()";exit;)
-echo "Terminated connections"
+if [ -z "$MOSIP_DB_NAME" ]; then  # Check if MOSIP_DB_NAME is empty
+    echo "Terminating active connections"
+    CONN=$(PGPASSWORD=$SU_USER_PWD psql -v ON_ERROR_STOP=1 --username=$SU_USER --host=$DB_SERVERIP --port=$DB_PORT --dbname=$DEFAULT_DB_NAME -t -c "SELECT count(pg_terminate_backend(pg_stat_activity.pid)) FROM pg_stat_activity WHERE datname = '$MOSIP_DB_NAME' AND pid <> pg_backend_pid()"; exit;)
+    echo "Terminated connections"
+else
+    echo "Skipping termination of active connections as MOSIP_DB_NAME is set."
+fi
 
 ## Create users
-echo `date "+%m/%d/%Y %H:%M:%S"` ": Creating database users" 
+echo `date "+%m/%d/%Y %H:%M:%S"` ": Creating database users"
 
 
 MASTERCONN=$(PGPASSWORD=$SU_USER_PWD  psql --username=$SU_USER --host=$DB_SERVERIP --port=$DB_PORT --dbname=$DEFAULT_DB_NAME -t -c "select count(1) from pg_roles where rolname IN('archiveuser')";exit;)
