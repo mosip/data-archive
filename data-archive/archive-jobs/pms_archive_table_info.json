@@ -23,6 +23,14 @@
             "date_column": "cr_dtimes",
             "retention_days": 183,
             "operation_type": "archive_delete"
+        },
+        {
+            "source_table": "notifications",
+            "archive_table": "",
+            "id_column": "id",
+            "date_column": "cr_dtimes",
+            "retention_days": 60,
+            "operation_type": "delete"
         }
     ]
 }
