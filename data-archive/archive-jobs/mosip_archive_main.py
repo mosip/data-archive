@@ -178,6 +178,7 @@ def data_archive(db_name, db_param, tables_info, batch_size):
     total_archived = 0
     total_deleted = 0
     total_batches_processed = 0  # Counter for total batches processed
+    
 
     try:
         print(f'Connecting to the PostgreSQL source and archive databases for {db_name}...')
@@ -215,15 +216,29 @@ def data_archive(db_name, db_param, tables_info, batch_size):
 
         for table_info in tables_info:
             source_table_name = table_info['source_table']
-            archive_table_name = table_info['archive_table']
+            archive_table_name = table_info.get('archive_table')
             id_column = table_info['id_column']
             operation_type = table_info.get('operation_type', 'none').lower()
             batch_count = 0  # Counter for batches for the current table
-
-            # Skip the table if operation_type is 'none'
-            if operation_type == 'none':
+            # Validate operation_type-specific fields
+            if operation_type == 'archive_delete':
+                if 'archive_table' not in table_info:
+                    print(f"Error: 'archive_table' is required for operation_type 'archive_delete' in table {source_table_name}.")
+                    continue
+            elif operation_type == 'delete':
+                if 'archive_table' in table_info:
+                    print(f"Warning: 'archive_table' will be ignored for operation_type 'delete' in table {source_table_name}.")
+            elif operation_type == 'none':
                 print(f"Skipping archival for table {source_table_name} as operation type is 'none'.")
                 continue
+            else:
+                print(f"Error: Unsupported operation_type '{operation_type}' for table {source_table_name}.")
+                continue
+
+            # # Skip the table if operation_type is 'none'
+            # if operation_type == 'none':
+            #     print(f"Skipping archival for table {source_table_name} as operation type is 'none'.")
+            #     continue
 
             # Prepare the select query based on operation type and retention settings
             if 'retention_days' in table_info and 'date_column' in table_info:
@@ -249,6 +264,7 @@ def data_archive(db_name, db_param, tables_info, batch_size):
                     # Increment the batch count and print
                     batch_count += 1
                     print(f"Starting batch {batch_count} for table {source_table_name}...")
+                    
 
                     # Accumulate records for bulk insert or delete
                     bulk_insert_values = [get_tablevalues(row) for row in rows]
@@ -320,11 +336,12 @@ def data_archive(db_name, db_param, tables_info, batch_size):
         if archive_conn is not None:
             archive_conn.close()
             print('Archive database connection closed.')
+        if total_batches_processed > 0:
+            print(f"Data archival completed for {db_name}.")
+            print(f"Total records archived: {total_archived}")
+            print(f"Total records deleted: {total_deleted}")
+            print(f"Total batches processed for {db_name}: {total_batches_processed}")
 
-        print(f"Data archival completed for {db_name}.")
-        print(f"Total records archived: {total_archived}")
-        print(f"Total records deleted: {total_deleted}")
-        print(f"Total batches processed for {db_name}: {total_batches_processed}")
 
 
 def main():
