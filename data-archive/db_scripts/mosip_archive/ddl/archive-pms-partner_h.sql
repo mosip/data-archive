@@ -4,9 +4,10 @@ CREATE TABLE archive.mosip_pms_partner_h(
     eff_dtimes timestamp NOT NULL,
     policy_group_id character varying(36),
     name character varying(128) NOT NULL,
-    address character varying(2000),
-    contact_no character varying(16),
-    email_id character varying(254),
+    address character varying(10000),
+    contact_no character varying(1000),
+    email_id character varying(3000),
+    email_id_hash character varying(3000),
     certificate_alias character varying(128),
     user_id character varying(256) NOT NULL,
     partner_type_code character varying(36) NOT NULL,
@@ -32,6 +33,7 @@ COMMENT ON COLUMN archive.mosip_pms_partner_h.name IS 'Name: Name of the Partner
 COMMENT ON COLUMN archive.mosip_pms_partner_h.address IS 'Address: Address of the partner organization';
 COMMENT ON COLUMN archive.mosip_pms_partner_h.contact_no IS 'Contact Number: Contact number of the partner organization or the contact person';
 COMMENT ON COLUMN archive.mosip_pms_partner_h.email_id IS 'Email ID: Email ID of the MISP organization''s contact person';
+COMMENT ON COLUMN archive.mosip_pms_partner_h.email_id_hash IS 'Email ID Hash: Hash of the email id';
 COMMENT ON COLUMN archive.mosip_pms_partner_h.certificate_alias IS 'Certificate Alias: Certificate alias provided by the partner to MOSIP to use its authentication request data.';
 COMMENT ON COLUMN archive.mosip_pms_partner_h.user_id IS 'Partner Admin: When a partner registers themselves to avail auth services, a user id is created for them to login to partner management portal to perform few operational activities. Currently only one user is created per partner.';
 COMMENT ON COLUMN archive.mosip_pms_partner_h.partner_type_code IS 'Partner Type Code: Partner type code for different type of partners... Referenced from pmp.partner_type table';
